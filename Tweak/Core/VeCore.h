@@ -15,6 +15,8 @@ BOOL pfSaveRemoteAttachments;
 BOOL pfLogWithoutContent;
 NSArray* pfBlockedSenders;
 BOOL pfAutomaticallyDeleteLogs;
+BOOL pfBarkForwardingEnabled;
+NSString* pfBarkAPIKey;
 
 @interface BBServer : NSObject
 @end

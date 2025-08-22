@@ -16,6 +16,8 @@ static NSString* const kPreferenceKeyBlockedSenders = @"BlockedSenders";
 static NSString* const kPreferenceKeyUseBiometricProtection = @"UseBiometricProtection";
 static NSString* const kPreferenceKeyAutomaticallyDeleteLogs = @"AutomaticallyDeleteLogs";
 static NSString* const kPreferenceKeyUseAmericanDateFormat = @"UseAmericanDateFormat";
+static NSString* const kPreferenceKeyBarkForwardingEnabled = @"BarkForwardingEnabled";
+static NSString* const kPreferenceKeyBarkAPIKey = @"BarkAPIKey";
 static NSString* const kPreferenceKeySorting = @"Sorting";
 
 static NSString* const kPreferenceKeySortingApplication = @"Application";
@@ -33,4 +35,6 @@ static inline NSArray* kPreferenceKeyBlockedSendersDefaultValue(void) {
 static BOOL const kPreferenceKeyUseBiometricProtectionDefaultValue = NO;
 static BOOL const kPreferenceKeyAutomaticallyDeleteLogsDefaultValue = YES;
 static BOOL const kPreferenceKeyUseAmericanDateFormatDefaultValue = NO;
+static BOOL const kPreferenceKeyBarkForwardingEnabledDefaultValue = NO;
+static NSString* const kPreferenceKeyBarkAPIKeyDefaultValue = @"";
 static NSString* const kPreferenceKeySortingDefaultValue = kPreferenceKeySortingDate;

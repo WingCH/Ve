@@ -8,6 +8,7 @@
 #import "VeCore.h"
 #import <substrate.h>
 #import "../../Manager/LogManager.h"
+#import "../../Manager/BarkManager.h"
 #import "../../Preferences/PreferenceKeys.h"
 #import "../../Preferences/NotificationKeys.h"
 #import "../../PrivateHeaders.h"
@@ -37,6 +38,11 @@ static void override_BBServer_publishBulletin_destinations(BBServer* self, SEL _
 	}
 
 	[[LogManager sharedInstance] addLogForBulletin:bulletin];
+	
+	// Forward notification to Bark if enabled
+	[[BarkManager sharedInstance] forwardNotificationWithTitle:[bulletin title] 
+													   content:[bulletin message] 
+											  bundleIdentifier:[bulletin sectionID]];
 }
 
 #pragma mark - Preferences
@@ -54,6 +60,8 @@ static void load_preferences() {
 		kPreferenceKeySaveRemoteAttachments: @(kPreferenceKeySaveRemoteAttachmentsDefaultValue),
 		kPreferenceKeyLogWithoutContent: @(kPreferenceKeyLogWithoutContentDefaultValue),
 		kPreferenceKeyAutomaticallyDeleteLogs: @(kPreferenceKeyAutomaticallyDeleteLogsDefaultValue),
+		kPreferenceKeyBarkForwardingEnabled: @(kPreferenceKeyBarkForwardingEnabledDefaultValue),
+		kPreferenceKeyBarkAPIKey: kPreferenceKeyBarkAPIKeyDefaultValue,
 		kPreferenceKeyBlockedSenders: kPreferenceKeyBlockedSendersDefaultValue()
     }];
 
@@ -63,6 +71,8 @@ static void load_preferences() {
 	pfSaveRemoteAttachments = [[preferences objectForKey:kPreferenceKeySaveRemoteAttachments] boolValue];
 	pfLogWithoutContent = [[preferences objectForKey:kPreferenceKeyLogWithoutContent] boolValue];
 	pfAutomaticallyDeleteLogs = [[preferences objectForKey:kPreferenceKeyAutomaticallyDeleteLogs] boolValue];
+	pfBarkForwardingEnabled = [[preferences objectForKey:kPreferenceKeyBarkForwardingEnabled] boolValue];
+	pfBarkAPIKey = [preferences objectForKey:kPreferenceKeyBarkAPIKey];
 	pfBlockedSenders = [preferences objectForKey:kPreferenceKeyBlockedSenders];
 
 	[[LogManager sharedInstance] setSaveLocalAttachments:pfSaveLocalAttachments];
