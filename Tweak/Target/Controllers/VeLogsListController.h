@@ -9,6 +9,7 @@
 
 NSUserDefaults* preferences;
 NSString* pfSorting;
+BOOL pfUseBiometricProtection;
 
 @interface VeLogsListController : AbstractListController <UISearchBarDelegate>
 @property(nonatomic)UIButton* filterButton;

@@ -21,11 +21,12 @@
  * Sets up the controller's view.
  */
 - (void)viewDidLoad {
-    [self setWantsAuth:YES];
-
     [super viewDidLoad];
 
     load_preferences();
+
+    // 只在用戶啟用生物識別保護時才要求驗證
+    [self setWantsAuth:pfUseBiometricProtection];
 
     [self setSearchController:[[UISearchController alloc] init]];
     [[[self searchController] searchBar] setDelegate:self];
@@ -216,9 +217,11 @@ static void load_preferences() {
     preferences = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
 
     [preferences registerDefaults:@{
-        kPreferenceKeySorting: kPreferenceKeySortingDefaultValue
+        kPreferenceKeySorting: kPreferenceKeySortingDefaultValue,
+        kPreferenceKeyUseBiometricProtection: @(kPreferenceKeyUseBiometricProtectionDefaultValue)
     }];
 
     pfSorting = [preferences objectForKey:kPreferenceKeySorting];
+    pfUseBiometricProtection = [[preferences objectForKey:kPreferenceKeyUseBiometricProtection] boolValue];
 }
 @end

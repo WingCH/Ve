@@ -228,7 +228,7 @@ static void load_preferences() {
 
     [preferences registerDefaults:@{
         kPreferenceKeyUseAmericanDateFormat: kPreferenceKeyUseAmericanDateFormat,
-        kPreferenceKeyBlockedSenders: kPreferenceKeyBlockedSendersDefaultValue
+        kPreferenceKeyBlockedSenders: kPreferenceKeyBlockedSendersDefaultValue()
     }];
 
     pfUseAmericanDateFormat = [[preferences objectForKey:kPreferenceKeyUseAmericanDateFormat] boolValue];

@@ -27,7 +27,9 @@ static NSUInteger const kPreferenceKeyLogLimitDefaultValue = 2000;
 static BOOL const kPreferenceKeySaveLocalAttachmentsDefaultValue = YES;
 static BOOL const kPreferenceKeySaveRemoteAttachmentsDefaultValue = YES;
 static BOOL const kPreferenceKeyLogWithoutContentDefaultValue = YES;
-static NSArray* const kPreferenceKeyBlockedSendersDefaultValue = @[];
+static inline NSArray* kPreferenceKeyBlockedSendersDefaultValue(void) {
+    return @[];
+}
 static BOOL const kPreferenceKeyUseBiometricProtectionDefaultValue = NO;
 static BOOL const kPreferenceKeyAutomaticallyDeleteLogsDefaultValue = YES;
 static BOOL const kPreferenceKeyUseAmericanDateFormatDefaultValue = NO;

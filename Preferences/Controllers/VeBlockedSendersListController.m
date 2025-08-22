@@ -53,7 +53,7 @@ static void load_preferences() {
     preferences = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
 
     [preferences registerDefaults:@{
-        kPreferenceKeyBlockedSenders: kPreferenceKeyBlockedSendersDefaultValue
+        kPreferenceKeyBlockedSenders: kPreferenceKeyBlockedSendersDefaultValue()
     }];
 
     pfBlockedSenders = [[preferences objectForKey:kPreferenceKeyBlockedSenders] mutableCopy];

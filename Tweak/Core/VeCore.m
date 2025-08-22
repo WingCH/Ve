@@ -54,7 +54,7 @@ static void load_preferences() {
 		kPreferenceKeySaveRemoteAttachments: @(kPreferenceKeySaveRemoteAttachmentsDefaultValue),
 		kPreferenceKeyLogWithoutContent: @(kPreferenceKeyLogWithoutContentDefaultValue),
 		kPreferenceKeyAutomaticallyDeleteLogs: @(kPreferenceKeyAutomaticallyDeleteLogsDefaultValue),
-		kPreferenceKeyBlockedSenders: kPreferenceKeyBlockedSendersDefaultValue
+		kPreferenceKeyBlockedSenders: kPreferenceKeyBlockedSendersDefaultValue()
     }];
 
     pfEnabled = [[preferences objectForKey:kPreferenceKeyEnabled] boolValue];

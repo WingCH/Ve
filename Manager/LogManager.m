@@ -16,6 +16,20 @@
 
 @implementation LogManager
 /**
+ * Returns the logs file path.
+ */
++ (NSString *)logsPath {
+    return ROOT_PATH_NS(@"/var/mobile/Library/codes.aurora.ve/logs.json");
+}
+
+/**
+ * Returns the logs attachment directory path.
+ */
++ (NSString *)logsAttachmentPath {
+    return ROOT_PATH_NS(@"/var/mobile/Library/codes.aurora.ve/attachments/");
+}
+
+/**
  * Creates the shared instance.
  */
 + (instancetype)sharedInstance {
@@ -157,7 +171,7 @@
 }
 
 - (void)saveAttachmentImage:(UIImage *)image forLog:(Log *)log {
-    NSString* directoryPath = [NSString stringWithFormat:@"%@%lu/", kLogsAttachmentPath, [log identifier]];
+    NSString* directoryPath = [NSString stringWithFormat:@"%@%lu/", [LogManager logsAttachmentPath], [log identifier]];
     if (![_fileManager fileExistsAtPath:directoryPath]) {
         [_fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:YES attributes:nil error:nil];
     }
@@ -172,7 +186,7 @@
 }
 
 - (NSArray *)getAttachmentsForLog:(Log *)log {
-    NSString* directoryPath = [NSString stringWithFormat:@"%@%lu/", kLogsAttachmentPath, [log identifier]];
+    NSString* directoryPath = [NSString stringWithFormat:@"%@%lu/", [LogManager logsAttachmentPath], [log identifier]];
     NSArray* directoryContents = [_fileManager contentsOfDirectoryAtPath:directoryPath error:nil];
 
     NSMutableArray* attachments = [[NSMutableArray alloc] init];
@@ -227,7 +241,7 @@
 - (NSMutableDictionary *)getJson {
     [self ensureResourcesExist];
 
-    NSData* jsonData = [NSData dataWithContentsOfFile:kLogsPath];
+    NSData* jsonData = [NSData dataWithContentsOfFile:[LogManager logsPath]];
     NSMutableDictionary* json = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:nil];
 
     return json;
@@ -240,7 +254,7 @@
  */
 - (void)setJsonFromDictionary:(NSMutableDictionary *)dictionary {
     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:dictionary options:NSJSONWritingPrettyPrinted error:nil];
-    [jsonData writeToFile:kLogsPath atomically:YES];
+    [jsonData writeToFile:[LogManager logsPath] atomically:YES];
 }
 
 /**
@@ -248,13 +262,13 @@
  */
 - (void)ensureResourcesExist {
     BOOL isDirectory;
-    if (![_fileManager fileExistsAtPath:kLogsAttachmentPath isDirectory:&isDirectory]) {
-        [_fileManager createDirectoryAtPath:kLogsAttachmentPath withIntermediateDirectories:YES attributes:nil error:nil];
+    if (![_fileManager fileExistsAtPath:[LogManager logsAttachmentPath] isDirectory:&isDirectory]) {
+        [_fileManager createDirectoryAtPath:[LogManager logsAttachmentPath] withIntermediateDirectories:YES attributes:nil error:nil];
     }
 
-    if (![_fileManager fileExistsAtPath:kLogsPath]) {
+    if (![_fileManager fileExistsAtPath:[LogManager logsPath]]) {
         NSData* jsonData = [NSJSONSerialization dataWithJSONObject:[[NSMutableDictionary alloc] init] options:NSJSONWritingPrettyPrinted error:nil];
-        [jsonData writeToFile:kLogsPath options:NSDataWritingAtomic error:nil];
+        [jsonData writeToFile:[LogManager logsPath] options:NSDataWritingAtomic error:nil];
     }
 }
 @end
