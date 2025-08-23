@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Vē is a notification logger for iOS/iPadOS jailbroken devices built using the Theos framework. It's a native tweak that integrates with SpringBoard to capture and log notifications with support for Bark forwarding.
+Vē is a comprehensive notification logger for iOS/iPadOS jailbroken devices built using the Theos framework. It's a native tweak that integrates with SpringBoard to capture, log, and manage notifications with advanced features including Bark forwarding, biometric protection, and rich attachment handling.
 
 ## Build System
 
@@ -45,48 +45,112 @@ The script automates:
 
 ## Architecture
 
-The project follows a modular architecture with three main components:
+The project follows a modular architecture with five main components:
 
 ### 1. Core Module (`Tweak/Core/`)
 - **VeCore.h/.m**: Main tweak logic and SpringBoard integration
 - Handles notification interception and logging
 - Manages global preferences and state
+- Integrates with BarkManager for notification forwarding
 
 ### 2. Target Module (`Tweak/Target/`)
 - **VeTarget.h/.m**: UI components for the notification viewer
-- **Controllers/**: List controllers for different views (logs, attachments, details)
+- **Controllers/**: List controllers for different views
+  - `AbstractListController`: Base class for all list controllers
+  - `VeLogsListController`: Main notification logs view
+  - `VeAttachmentListController`: Attachment browser
+  - `VeDetailListController`: Detailed notification view
 - **Cells/**: Custom table view cells for displaying notification data
-- **Views/**: Custom views including biometric protection overlay
-- **Sorter/**: Data sorting implementations (by date, application, search)
+  - `VeLogCell`: Main notification entry cell
+  - `VeAttachmentCell`: Attachment preview cell
+  - `VeFullAttachmentCell`: Full-size attachment display
+  - `VeDetailCell`: Detailed notification information cell
+- **Sorter/**: Data sorting implementations
+  - `AbstractSorter`: Base sorting protocol
+  - `DateSorter`: Sort by timestamp
+  - `ApplicationSorter`: Sort by app/bundle identifier
+  - `SearchSorter`: Filter and search functionality
 
 ### 3. Preferences Module (`Preferences/`)
 - **Controllers/**: Settings panel controllers
+  - `VeRootListController`: Main preferences panel
+  - `VeBlockedSendersListController`: Manage blocked senders
+  - `VeCreditsListController`: Credits and acknowledgments
 - **Cells/**: Custom preference cells
+  - `LinkCell`: External link buttons
+  - `SingleContactCell`: Developer contact information
 - **Resources/**: Plist files for preference configuration
 
 ### 4. Managers (`Manager/`)
-- **LogManager**: Handles notification data persistence
-- **BarkManager**: Manages Bark API integration for notification forwarding
-- **Log**: Core logging functionality
+- **LogManager**: Handles notification data persistence and retrieval
+- **BarkManager**: Advanced Bark API integration with features:
+  - iTunes API caching for app icons
+  - Encryption support for secure forwarding
+  - Notification level mapping
+  - Bulletin ID generation
+- **Log**: Core logging and data structures
 
 ### 5. Utilities (`Utils/`)
-- **DateUtil**: Date formatting and manipulation
-- **ImageUtil**: Image processing utilities
-- **StringUtil**: String manipulation helpers
+- **DateUtil**: Date formatting and manipulation with localization support
+- **ImageUtil**: Image processing utilities for attachments
+- **StringUtil**: String manipulation and validation helpers
 
-## Key Components
+## Key Features
 
-- **Notification Logging**: Captures notifications via SpringBoard hooks
-- **Biometric Protection**: Optional Touch ID/Face ID protection for viewing logs
-- **Bark Integration**: Forward notifications to Bark service
-- **Attachment Handling**: Save and display notification attachments
-- **Search & Sorting**: Multiple sorting options and search functionality
-- **Blocked Senders**: Filter notifications from specific apps/senders
+### Core Functionality
+- **Notification Logging**: Captures notifications via SpringBoard hooks with BBBulletin integration
+- **Rich Attachment Support**: Save and display both local and remote notification attachments
+- **Advanced Search & Sorting**: Multiple sorting options (date, application, search) with real-time filtering
+- **Blocked Senders Management**: Filter notifications from specific apps/senders with easy management interface
+
+### Privacy & Security
+- **Secure Storage**: Notification data stored securely with automatic cleanup options
+- **Privacy Controls**: Options to log notifications without content for privacy
+- **Content Filtering**: Smart filtering to avoid logging empty or blocked notifications
+
+### External Integration  
+- **Bark Forwarding**: Advanced integration with Bark notification service featuring:
+  - Encrypted message forwarding with custom encryption keys
+  - App icon retrieval via iTunes API with intelligent caching
+  - Notification level mapping (Active, Passive based on bulletin existence)
+  - Custom bulletin ID generation for tracking
+
+### User Experience
+- **Configurable Log Limits**: Adjustable storage limits (200-1000 notifications via UI slider)
+- **Automatic Cleanup**: Optional automatic deletion of logs after 7 days
+- **Date Format Options**: Support for American and international date formats
+- **Rich UI**: Custom cells and controllers following iOS design patterns with segmented sliders
 
 ## Development Notes
 
-- The tweak targets SpringBoard and Preferences app processes
-- Uses MobileSubstrate for runtime patching
-- Preferences are stored using NSUserDefaults
-- Log data is managed through the LogManager static methods
+### Technical Implementation
+- The tweak targets SpringBoard and Preferences app processes via INSTALL_TARGET_PROCESSES
+- Uses MobileSubstrate for runtime patching and method swizzling
+- Preferences stored using NSUserDefaults with suite name: `codes.aurora.ve.preferences`
+- Log data managed through LogManager static methods with automatic persistence
 - UI follows iOS design patterns with custom cells and controllers
+
+### Project Configuration
+- **Package**: codes.aurora.ve
+- **Version**: 2.0
+- **Architecture**: iphoneos-arm64 (supports arm64/arm64e)
+- **Dependencies**: firmware (>= 14.0), mobilesubstrate, preferenceloader
+- **Scheme**: Rootless package format for modern jailbreaks
+
+### Key Preference Keys
+- `Enabled`: Toggle tweak functionality
+- `LogLimit`: Maximum number of stored notifications (200-1000)
+- `SaveLocalAttachments`/`SaveRemoteAttachments`: Attachment handling
+- `LogWithoutContent`: Privacy mode for content-less logging
+- `BlockedSenders`: Array of blocked bundle identifiers
+- `AutomaticallyDeleteLogs`: Enable 7-day cleanup
+- `BarkForwardingEnabled`: Enable Bark integration
+- `BarkAPIKey`/`BarkEncryptionKey`: Bark configuration
+- `UseAmericanDateFormat`: Date formatting preference
+- `Sorting`: Default sorting method (Date/Application/Search)
+
+### Development Workflow
+1. Use `make` for building
+2. Use `make package` for validation without installation
+3. Use automated script `./install-to-device.sh` for device deployment
+4. Preferences changes trigger `codes.aurora.ve.preferences.reload` notification
