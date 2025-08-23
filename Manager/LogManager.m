@@ -57,11 +57,7 @@
     NSMutableArray* logs = [self getLogsFromJson:json];
 
     NSUInteger identifier = lastIdentifier + 1;
-    NSString* bundleIdentifier = [bulletin sectionID] ?: @"com.apple.springboard";
-    NSString* title = [bulletin title] ?: @"";
-    NSString* content = [bulletin message] ?: @"";
-    NSDate* date = [bulletin date] ?: [NSDate date];
-    Log* log = [[Log alloc] initWithIdentifier:identifier bundleIdentifier:bundleIdentifier title:title content:content andDate:date];
+    Log* log = [[Log alloc] initWithBulletin:bulletin identifier:identifier];
 
     // Unseen notifications will be sent again after a respring.
     // We check by date if the notification has been logged already.
@@ -69,13 +65,51 @@
         return;
     }
 
-    [logs insertObject:@{
+    NSMutableDictionary* logDict = [@{
         kLogKeyIdentifier: @(identifier),
         kLogKeyBundleIdentifier: [log bundleIdentifier],
         kLogKeyTitle: [log title],
         kLogKeyContent: [log content],
         kLogKeyDate: [DateUtil getStringFromDate:[log date] withFormat:kLogInternalDateFormat]
-    } atIndex:0];
+    } mutableCopy];
+    
+    // Add new properties if they exist
+    if ([log subtitle] && ![[log subtitle] isEqualToString:@""]) {
+        logDict[kLogKeySubtitle] = [log subtitle];
+    }
+    
+    if ([log publicationDate]) {
+        logDict[kLogKeyPublicationDate] = [DateUtil getStringFromDate:[log publicationDate] withFormat:kLogInternalDateFormat];
+    }
+    
+    if ([log expirationDate]) {
+        logDict[kLogKeyExpirationDate] = [DateUtil getStringFromDate:[log expirationDate] withFormat:kLogInternalDateFormat];
+    }
+    
+    // Identifiers
+    if ([log bulletinID]) logDict[kLogKeyBulletinID] = [log bulletinID];
+    if ([log bulletinVersionID]) logDict[kLogKeyBulletinVersionID] = [log bulletinVersionID];
+    if ([log threadID]) logDict[kLogKeyThreadID] = [log threadID];
+    if ([log categoryID]) logDict[kLogKeyCategoryID] = [log categoryID];
+    
+    // Behavior properties - always save these as they have default boolean values
+    logDict[kLogKeyClearable] = @([log clearable]);
+    logDict[kLogKeyIgnoresQuietMode] = @([log ignoresQuietMode]);
+    logDict[kLogKeyTurnsOnDisplay] = @([log turnsOnDisplay]);
+    logDict[kLogKeyPlaySound] = @([log playSound]);
+    logDict[kLogKeyHasPrivateContent] = @([log hasPrivateContent]);
+    
+    // Summary and content
+    if ([log summaryArgument]) logDict[kLogKeySummaryArgument] = [log summaryArgument];
+    if ([log summaryArgumentCount] > 0) logDict[kLogKeySummaryArgumentCount] = @([log summaryArgumentCount]);
+    
+    // Time zone
+    if ([log timeZone]) logDict[kLogKeyTimeZone] = [[log timeZone] name];
+    
+    // Raw bulletin data for debugging
+    if ([log rawBulletinData]) logDict[kLogKeyRawBulletinData] = [log rawBulletinData];
+    
+    [logs insertObject:logDict atIndex:0];
 
     if ([self saveLocalAttachments]) {
         [self saveLocalAttachmentsForLog:log fromBulletin:bulletin];
@@ -260,6 +294,23 @@
 /**
  * Creates the json and path for the attachments.
  */
+- (void)removeAllLogs {
+    // Remove all log files
+    if ([_fileManager fileExistsAtPath:[LogManager logsPath]]) {
+        [_fileManager removeItemAtPath:[LogManager logsPath] error:nil];
+    }
+    
+    // Remove all attachment directories
+    if ([_fileManager fileExistsAtPath:[LogManager logsAttachmentPath]]) {
+        [_fileManager removeItemAtPath:[LogManager logsAttachmentPath] error:nil];
+    }
+    
+    // Recreate empty structure
+    [self ensureResourcesExist];
+    
+    NSLog(@"[Ve] All logs and attachments have been cleared");
+}
+
 - (void)ensureResourcesExist {
     BOOL isDirectory;
     if (![_fileManager fileExistsAtPath:[LogManager logsAttachmentPath] isDirectory:&isDirectory]) {

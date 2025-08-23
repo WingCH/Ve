@@ -23,6 +23,7 @@
 + (instancetype)sharedInstance;
 - (void)addLogForBulletin:(BBBulletin *)bulletin;
 - (void)removeLog:(Log *)log;
+- (void)removeAllLogs;
 - (NSArray *)getAttachmentsForLog:(Log *)log;
 - (NSMutableArray *)getLogsFromJson:(NSMutableDictionary *)json;
 - (NSMutableDictionary *)getJson;

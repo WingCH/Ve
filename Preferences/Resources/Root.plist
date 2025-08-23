@@ -265,6 +265,14 @@
 			<key>action</key>
 			<string>resetPrompt</string>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Reset All Data</string>
+			<key>action</key>
+			<string>resetAllDataPrompt</string>
+		</dict>
 
 		<dict>
 			<key>cell</key>

@@ -14,11 +14,38 @@
 @end
 
 @interface BBBulletin : NSObject
+// Basic properties
 @property(nonatomic, copy)NSString* sectionID;
 @property(nonatomic, copy)NSString* title;
+@property(nonatomic, copy)NSString* subtitle;
 @property(nonatomic, copy)NSString* message;
 @property(nonatomic)NSDate* date;
+@property(nonatomic)NSDate* publicationDate;
+@property(nonatomic)NSDate* expirationDate;
+
+// Identifiers
+@property(nonatomic, copy)NSString* bulletinID;
+@property(nonatomic, copy)NSString* bulletinVersionID;
+@property(nonatomic, copy)NSString* threadID;
+@property(nonatomic, copy)NSString* categoryID;
+
+// Attachments
 @property(nonatomic, copy)BBAttachmentMetadata* primaryAttachment;
+@property(nonatomic, copy)NSArray* additionalAttachments;
+
+// Behavior properties
+@property(nonatomic, assign)BOOL clearable;
+@property(nonatomic, assign)BOOL ignoresQuietMode;
+@property(nonatomic, assign)BOOL turnsOnDisplay;
+@property(nonatomic, assign)BOOL playSound;
+@property(nonatomic, assign)BOOL hasPrivateContent;
+
+// Summary and content
+@property(nonatomic, copy)NSString* summaryArgument;
+@property(nonatomic, assign)NSUInteger summaryArgumentCount;
+
+// Time zone
+@property(nonatomic, copy)NSTimeZone* timeZone;
 @end
 
 @interface UIImage (Private)

@@ -11,6 +11,7 @@
 #import <rootless.h>
 #import "../PreferenceKeys.h"
 #import "../NotificationKeys.h"
+#import "../../Manager/LogManager.h"
 
 @implementation VeRootListController
 /**
@@ -110,5 +111,48 @@
 
 	[self reloadSpecifiers];
 	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)kNotificationKeyPreferencesReload, nil, nil, YES);
+}
+
+/**
+ * Prompts the user to reset all logs and data.
+ */
+- (void)resetAllDataPrompt {
+    UIAlertController* resetAlert = [UIAlertController alertControllerWithTitle:@"Reset All Data" 
+                                                                        message:@"This will permanently delete ALL notification logs and attachments. This action cannot be undone.\n\nAre you sure you want to continue?" 
+                                                                 preferredStyle:UIAlertControllerStyleAlert];
+
+    UIAlertAction* yesAction = [UIAlertAction actionWithTitle:@"Delete All" 
+                                                        style:UIAlertActionStyleDestructive 
+                                                      handler:^(UIAlertAction * action) {
+        [self resetAllData];
+	}];
+
+	UIAlertAction* noAction = [UIAlertAction actionWithTitle:@"Cancel" 
+                                                       style:UIAlertActionStyleCancel 
+                                                     handler:nil];
+
+	[resetAlert addAction:yesAction];
+	[resetAlert addAction:noAction];
+
+	[self presentViewController:resetAlert animated:YES completion:nil];
+}
+
+/**
+ * Resets all logs and data.
+ */
+- (void)resetAllData {
+    [[LogManager sharedInstance] removeAllLogs];
+    
+    // Show success message
+    UIAlertController* successAlert = [UIAlertController alertControllerWithTitle:@"Success" 
+                                                                          message:@"All notification logs and attachments have been permanently deleted." 
+                                                                   preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction* okAction = [UIAlertAction actionWithTitle:@"OK" 
+                                                       style:UIAlertActionStyleDefault 
+                                                     handler:nil];
+    
+    [successAlert addAction:okAction];
+    [self presentViewController:successAlert animated:YES completion:nil];
 }
 @end
