@@ -4,7 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Vē is a comprehensive notification logger for iOS/iPadOS jailbroken devices built using the Theos framework. It's a native tweak that integrates with SpringBoard to capture, log, and manage notifications with advanced features including Bark forwarding, biometric protection, and rich attachment handling.
+**VE Enhanced** is a comprehensive notification logger for iOS/iPadOS jailbroken devices built using the Theos framework. This project is a fork of [Ve by Alexandra Aurora Göttlicher, 74k1_](https://github.com/rrk567301/Ve) with added notification forwarding capabilities.
+
+### Key Enhancements
+- **Bark Integration**: Forward notifications to Bark server with full encryption support
+- **iTunes API Integration**: Automatic app icon fetching for forwarded notifications  
+- **Advanced Security**: Encrypted message forwarding with custom keys
+- **Smart Filtering**: Intelligent notification level mapping (Active/Passive)
+
+The enhanced version maintains all original Ve functionality while adding powerful notification forwarding features for remote monitoring and integration with external services.
 
 ## Build System
 
@@ -29,7 +37,7 @@ brew install sshpass
 make package && ./install-to-device.sh $THEOS_DEVICE_IP $THEOS_DEVICE_PASSWORD
 
 # Or specify a particular deb file
-./install-to-device.sh $THEOS_DEVICE_IP $THEOS_DEVICE_PASSWORD codes.aurora.ve_2.0_iphoneos-arm64.deb
+./install-to-device.sh $THEOS_DEVICE_IP $THEOS_DEVICE_PASSWORD codes.wingchan.ve-enhanced_2.0_iphoneos-arm64.deb
 ```
 
 The script automates:
@@ -126,16 +134,19 @@ The project follows a modular architecture with five main components:
 ### Technical Implementation
 - The tweak targets SpringBoard and Preferences app processes via INSTALL_TARGET_PROCESSES
 - Uses MobileSubstrate for runtime patching and method swizzling
-- Preferences stored using NSUserDefaults with suite name: `codes.aurora.ve.preferences`
+- Preferences stored using NSUserDefaults with suite name: `codes.wingchan.ve-enhanced.preferences`
 - Log data managed through LogManager static methods with automatic persistence
 - UI follows iOS design patterns with custom cells and controllers
 
 ### Project Configuration
-- **Package**: codes.aurora.ve
+- **Package**: codes.wingchan.ve-enhanced
+- **Name**: VE Enhanced
 - **Version**: 2.0
 - **Architecture**: iphoneos-arm64 (supports arm64/arm64e)
 - **Dependencies**: firmware (>= 14.0), mobilesubstrate, preferenceloader
 - **Scheme**: Rootless package format for modern jailbreaks
+- **Original Project**: Fork of [Ve](https://github.com/rrk567301/Ve) by Alexandra Aurora Göttlicher, 74k1_
+- **Enhanced by**: Wing CHAN
 
 ### Key Preference Keys
 - `Enabled`: Toggle tweak functionality
@@ -153,4 +164,4 @@ The project follows a modular architecture with five main components:
 1. Use `make` for building
 2. Use `make package` for validation without installation
 3. Use automated script `./install-to-device.sh` for device deployment
-4. Preferences changes trigger `codes.aurora.ve.preferences.reload` notification
+4. Preferences changes trigger `codes.wingchan.ve-enhanced.preferences.reload` notification

@@ -19,14 +19,14 @@
  * Returns the logs file path.
  */
 + (NSString *)logsPath {
-    return ROOT_PATH_NS(@"/var/mobile/Library/codes.aurora.ve/logs.json");
+    return ROOT_PATH_NS(@"/var/mobile/Library/codes.wingchan.ve-enhanced/logs.json");
 }
 
 /**
  * Returns the logs attachment directory path.
  */
 + (NSString *)logsAttachmentPath {
-    return ROOT_PATH_NS(@"/var/mobile/Library/codes.aurora.ve/attachments/");
+    return ROOT_PATH_NS(@"/var/mobile/Library/codes.wingchan.ve-enhanced/attachments/");
 }
 
 /**

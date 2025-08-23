@@ -5,9 +5,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>VePreferences</string>
+	<string>VEEnhancedPreferences</string>
 	<key>CFBundleIdentifier</key>
-	<string>codes.aurora.ve.preferences</string>
+	<string>codes.wingchan.ve-enhanced.preferences</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>

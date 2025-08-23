@@ -5,7 +5,7 @@
 //  Created by Alexandra Aurora Göttlicher
 //
 
-static NSString* const kPreferencesIdentifier = @"codes.aurora.ve.preferences";
+static NSString* const kPreferencesIdentifier = @"codes.wingchan.ve-enhanced.preferences";
 
 static NSString* const kPreferenceKeyEnabled = @"Enabled";
 static NSString* const kPreferenceKeyLogLimit = @"LogLimit";

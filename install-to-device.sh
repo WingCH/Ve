@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Vē automatic device installation script
+# VE Enhanced automatic device installation script
 # Usage: ./install-to-device.sh [device_ip] [ssh_password] [deb_filename(optional)]
 
 set -e  # Exit on error
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 if [ $# -lt 2 ]; then
     echo -e "${RED}Usage: $0 <device_ip> <ssh_password> [deb_filename]${NC}"
     echo "Example: $0 192.168.1.100 alpine"
-    echo "Example: $0 192.168.1.100 alpine codes.aurora.ve_2.0_iphoneos-arm64.deb"
+    echo "Example: $0 192.168.1.100 alpine codes.wingchan.ve-enhanced_2.0_iphoneos-arm64.deb"
     exit 1
 fi
 
@@ -85,4 +85,4 @@ echo -e "${YELLOW}Step 4: Cleaning up temporary files...${NC}"
 sshpass -p "$SSH_PASSWORD" ssh mobile@"$DEVICE_IP" "rm -f /var/mobile/Documents/$DEB_FILENAME" || echo -e "${YELLOW}Warning: Could not delete temporary file${NC}"
 
 echo -e "${GREEN}Installation completed! The tweak should now be loaded in SpringBoard.${NC}"
-echo -e "${GREEN}You can find the preferences in Settings > Vē.${NC}"
+echo -e "${GREEN}You can find the preferences in Settings > VE Enhanced.${NC}"

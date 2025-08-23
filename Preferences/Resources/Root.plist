@@ -12,9 +12,9 @@
 			<key>cellClass</key>
 			<string>SingleContactCell</string>
 			<key>displayName</key>
-			<string>Alexandra</string>
+			<string>Wing CHAN</string>
 			<key>username</key>
-			<string>AlexandraAurora</string>
+			<string>wingchan</string>
 			<key>height</key>
 			<integer>58</integer>
 		</dict>
@@ -24,13 +24,13 @@
 			<key>default</key>
 			<true />
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>Enabled</string>
 			<key>label</key>
-			<string>Enable Vē</string>
+			<string>Enable VE Enhanced</string>
             <key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 
 		<dict>
@@ -55,7 +55,7 @@
 			<key>default</key>
 			<real>200</real>
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>LogLimit</string>
 			<key>min</key>
@@ -69,7 +69,7 @@
 			<key>segmentCount</key>
 			<real>4</real>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -77,13 +77,13 @@
 			<key>default</key>
 			<true />
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>LogWithoutContent</string>
 			<key>label</key>
 			<string>Notifications Without Content</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 
 		<dict>
@@ -102,13 +102,13 @@
 			<key>default</key>
 			<true />
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>SaveLocalAttachments</string>
 			<key>label</key>
 			<string>Save Local Attachments</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -116,13 +116,13 @@
 			<key>default</key>
 			<true />
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>SaveRemoteAttachments</string>
 			<key>label</key>
 			<string>Save Remote Attachments</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 
 		<dict>
@@ -158,13 +158,13 @@
 			<key>default</key>
 			<true />
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>AutomaticallyDeleteLogs</string>
 			<key>label</key>
 			<string>Automatically Delete Logs</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 
 		<dict>
@@ -179,13 +179,13 @@
 			<key>default</key>
 			<false />
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>UseAmericanDateFormat</string>
 			<key>label</key>
 			<string>Use American Date Format</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 
 		<dict>
@@ -204,13 +204,13 @@
 			<key>default</key>
 			<false />
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>BarkForwardingEnabled</string>
 			<key>label</key>
 			<string>Enable Bark Forwarding</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -218,7 +218,7 @@
 			<key>default</key>
 			<string></string>
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>BarkAPIKey</string>
 			<key>label</key>
@@ -226,7 +226,7 @@
 			<key>placeholder</key>
 			<string>Enter your Bark API key</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -234,7 +234,7 @@
 			<key>default</key>
 			<string></string>
 			<key>defaults</key>
-			<string>codes.aurora.ve.preferences</string>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>key</key>
 			<string>BarkEncryptionKey</string>
 			<key>label</key>
@@ -242,7 +242,7 @@
 			<key>placeholder</key>
 			<string>Leave blank to disable encryption</string>
 			<key>PostNotification</key>
-			<string>codes.aurora.ve.preferences.reload</string>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 
 		<dict>
@@ -335,6 +335,6 @@
 		</dict>
 	</array>
 	<key>title</key>
-	<string>Vē</string>
+	<string>VE Enhanced</string>
 </dict>
 </plist>

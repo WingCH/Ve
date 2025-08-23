@@ -5,4 +5,4 @@
 //  Created by Alexandra Aurora Göttlicher
 //
 
-static NSString* const kNotificationKeyPreferencesReload = @"codes.aurora.ve.preferences.reload";
+static NSString* const kNotificationKeyPreferencesReload = @"codes.wingchan.ve-enhanced.preferences.reload";
