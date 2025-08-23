@@ -37,12 +37,24 @@ static void override_BBServer_publishBulletin_destinations(BBServer* self, SEL _
 		return;
 	}
 
+	// Check if bulletinID already exists BEFORE adding log to determine notification level
+	NSString* bulletinID = [bulletin bulletinID];
+	BOOL bulletinIDExists = [[LogManager sharedInstance] isBulletinIDAlreadyExists:bulletinID];
+	BarkNotificationLevel level = bulletinIDExists ? BarkNotificationLevelPassive : BarkNotificationLevelActive;
+	
+	// Always try to add log (may be filtered by isLogAlreadyLogged)
 	[[LogManager sharedInstance] addLogForBulletin:bulletin];
 	
-	// Forward notification to Bark if enabled
-	[[BarkManager sharedInstance] forwardNotificationWithTitle:[bulletin title] 
-													   content:[bulletin message] 
-											  bundleIdentifier:[bulletin sectionID]];
+	NSLog(@"[Ve] BulletinID: %@, Exists: %@, Level: %@", bulletinID ?: @"nil", bulletinIDExists ? @"YES" : @"NO", level == BarkNotificationLevelActive ? @"active" : @"passive");
+	
+	// Use notification title directly, app icon will be fetched automatically
+	[[BarkManager sharedInstance] forwardNotificationWithTitle:[bulletin title]
+													  subtitle:nil
+														  body:[bulletin message]
+											  bundleIdentifier:[bulletin sectionID]
+														 level:level
+													  threadID:[bulletin threadID]
+													bulletinID:bulletinID];
 }
 
 #pragma mark - Preferences

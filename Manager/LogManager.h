@@ -27,4 +27,5 @@
 - (NSArray *)getAttachmentsForLog:(Log *)log;
 - (NSMutableArray *)getLogsFromJson:(NSMutableDictionary *)json;
 - (NSMutableDictionary *)getJson;
+- (BOOL)isBulletinIDAlreadyExists:(NSString *)bulletinID;
 @end

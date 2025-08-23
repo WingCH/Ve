@@ -247,6 +247,24 @@
     return NO;
 }
 
+- (BOOL)isBulletinIDAlreadyExists:(NSString *)bulletinID {
+    if (!bulletinID || [bulletinID isEqualToString:@""]) {
+        return NO;
+    }
+    
+    NSMutableDictionary* json = [self getJson];
+    NSMutableArray* logs = [self getLogsFromJson:json];
+    
+    for (NSDictionary* existingLogDictionary in logs) {
+        NSString* existingBulletinID = existingLogDictionary[kLogKeyBulletinID];
+        if (existingBulletinID && [existingBulletinID isEqualToString:bulletinID]) {
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
 - (NSMutableArray *)getLogsFromJson:(NSMutableDictionary *)json {
     return json[kLogsKeyLogs] ?: [[NSMutableArray alloc] init];
 }

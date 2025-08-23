@@ -12,6 +12,10 @@
 #import <Security/Security.h>
 #import <objc/runtime.h>
 
+@interface BarkManager ()
+@property (nonatomic, strong) NSMutableDictionary *iTunesAPICache;
+@end
+
 @implementation BarkManager
 
 + (instancetype)sharedInstance {
@@ -25,35 +29,10 @@
 
 - (instancetype)init {
     self = [super init];
+    if (self) {
+        _iTunesAPICache = [[NSMutableDictionary alloc] init];
+    }
     return self;
-}
-
-- (void)forwardNotificationWithTitle:(NSString *)title content:(NSString *)content bundleIdentifier:(NSString *)bundleIdentifier {
-    NSString* appName = [self getAppDisplayNameForBundleIdentifier:bundleIdentifier];
-    NSString* generatedBulletinID = [self generateBulletinIDForBundleIdentifier:bundleIdentifier title:title];
-    
-    [self forwardNotificationWithTitle:appName
-                               subtitle:title
-                                   body:content
-                       bundleIdentifier:bundleIdentifier
-                                  level:BarkNotificationLevelActive
-                               threadID:nil
-                             bulletinID:generatedBulletinID];
-}
-
-- (void)forwardNotificationWithTitle:(NSString *)title
-                            subtitle:(NSString *)subtitle
-                                body:(NSString *)body
-                    bundleIdentifier:(NSString *)bundleIdentifier
-                               level:(BarkNotificationLevel)level
-                            threadID:(NSString *)threadID {
-    [self forwardNotificationWithTitle:title
-                               subtitle:subtitle
-                                   body:body
-                       bundleIdentifier:bundleIdentifier
-                                  level:level
-                               threadID:threadID
-                             bulletinID:nil];
 }
 
 - (void)forwardNotificationWithTitle:(NSString *)title
@@ -67,12 +46,14 @@
     
     // Check if Bark forwarding is enabled
     BOOL barkForwardingEnabled = [[preferences objectForKey:kPreferenceKeyBarkForwardingEnabled] boolValue];
+    NSLog(@"[Ve] Bark forwarding enabled: %@", barkForwardingEnabled ? @"YES" : @"NO");
     if (!barkForwardingEnabled) {
         return;
     }
     
     // Get API key
     NSString* apiKey = [preferences objectForKey:kPreferenceKeyBarkAPIKey];
+    NSLog(@"[Ve] Bark API key: %@", apiKey ? @"[SET]" : @"[NOT SET]");
     if (!apiKey || [apiKey length] == 0) {
         NSLog(@"[Ve] Bark API key is not set");
         return;
@@ -86,18 +67,26 @@
     NSString* notificationSubtitle = subtitle ?: @"";
     NSString* notificationBody = body ?: @"";
     
-    // Send notification using POST method for better parameter control
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self sendBarkNotificationWithAPIKey:apiKey
-                                       title:notificationTitle
-                                    subtitle:notificationSubtitle
-                                        body:notificationBody
-                                       level:level
-                                    threadID:threadID
-                                  bulletinID:bulletinID
-                               encryptionKey:encryptionKey];
-    });
+    NSLog(@"[Ve] Preparing Bark notification - Title: %@, Subtitle: %@, Body: %@, Level: %@", 
+          notificationTitle, notificationSubtitle, notificationBody, [self levelToString:level]);
+    
+    // Get app icon URL and then send notification  
+    [self getAppIconURLForBundleIdentifier:bundleIdentifier completion:^(NSString *iconURL) {
+        // Send notification using POST method for better parameter control
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [self sendBarkNotificationWithAPIKey:apiKey
+                                           title:notificationTitle
+                                        subtitle:notificationSubtitle
+                                            body:notificationBody
+                                           level:level
+                                        threadID:threadID
+                                      bulletinID:bulletinID
+                                         iconURL:iconURL
+                                   encryptionKey:encryptionKey];
+        });
+    }];
 }
+
 
 - (void)sendBarkNotificationWithAPIKey:(NSString *)apiKey
                                  title:(NSString *)title
@@ -106,6 +95,7 @@
                                  level:(BarkNotificationLevel)level
                               threadID:(NSString *)threadID
                             bulletinID:(NSString *)bulletinID
+                               iconURL:(NSString *)iconURL
                          encryptionKey:(NSString *)encryptionKey {
     NSString* baseURL = @"https://api.day.app";
     NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", baseURL, apiKey]];
@@ -127,6 +117,7 @@
         if (body && body.length > 0) [payloadDict setObject:body forKey:@"body"];
         [payloadDict setObject:[self levelToString:level] forKey:@"level"];
         [payloadDict setObject:@"default" forKey:@"sound"];
+        if (iconURL && iconURL.length > 0) [payloadDict setObject:iconURL forKey:@"icon"];
         
         // Convert to JSON string
         NSError* jsonError;
@@ -135,8 +126,11 @@
             NSLog(@"[Ve] Failed to create JSON payload for encryption: %@", jsonError.localizedDescription);
             // Fallback to unencrypted
             [requestBody setObject:title forKey:@"title"];
-            [requestBody setObject:subtitle forKey:@"subtitle"];
+            if (subtitle && subtitle.length > 0) [requestBody setObject:subtitle forKey:@"subtitle"];
             [requestBody setObject:body forKey:@"body"];
+            [requestBody setObject:[self levelToString:level] forKey:@"level"];
+            [requestBody setObject:@"default" forKey:@"sound"];
+            if (iconURL && iconURL.length > 0) [requestBody setObject:iconURL forKey:@"icon"];
         } else {
             NSString* jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
             NSString* encryptedMessage = [self encryptMessage:jsonString withKey:encryptionKey];
@@ -147,11 +141,15 @@
     } else {
         // Standard unencrypted message
         [requestBody setObject:title forKey:@"title"];
-        [requestBody setObject:subtitle forKey:@"subtitle"];
+        if (subtitle && subtitle.length > 0) [requestBody setObject:subtitle forKey:@"subtitle"];
         [requestBody setObject:body forKey:@"body"];
         NSLog(@"[Ve] Sending unencrypted Bark notification");
         [requestBody setObject:[self levelToString:level] forKey:@"level"];
         [requestBody setObject:@"default" forKey:@"sound"];
+        if (iconURL && iconURL.length > 0) {
+            [requestBody setObject:iconURL forKey:@"icon"];
+            NSLog(@"[Ve] Adding custom icon URL: %@", iconURL);
+        }
     }
     
     // Set group based on threadID or default to app bundle
@@ -325,6 +323,102 @@
     NSString* ciphertext = [encryptedData base64EncodedStringWithOptions:0];
     
     return ciphertext;
+}
+
+#pragma mark - iTunes API & Icon Caching
+
+- (void)getAppIconURLForBundleIdentifier:(NSString *)bundleIdentifier 
+                              completion:(void (^)(NSString *iconURL))completion {
+    if (!bundleIdentifier || bundleIdentifier.length == 0) {
+        if (completion) completion(nil);
+        return;
+    }
+    
+    // Check cache first
+    NSString *cachedIconURL = self.iTunesAPICache[bundleIdentifier];
+    if (cachedIconURL != nil) {
+        NSLog(@"[Ve] Using cached icon URL for %@", bundleIdentifier);
+        // Return nil if cached value is empty string (no icon found previously)
+        if (completion) completion(cachedIconURL.length > 0 ? cachedIconURL : nil);
+        return;
+    }
+    
+    // Make iTunes API request
+    NSString *iTunesURL = [NSString stringWithFormat:@"https://itunes.apple.com/lookup?bundleId=%@", 
+                          [self urlEncode:bundleIdentifier]];
+    NSURL *url = [NSURL URLWithString:iTunesURL];
+    
+    if (!url) {
+        NSLog(@"[Ve] Invalid iTunes API URL for bundle: %@", bundleIdentifier);
+        if (completion) completion(nil);
+        return;
+    }
+    
+    NSLog(@"[Ve] Fetching icon URL from iTunes API for %@", bundleIdentifier);
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+        [request setHTTPMethod:@"GET"];
+        [request setTimeoutInterval:10.0];
+        [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+        
+        NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request 
+                                                                     completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            NSString *iconURL = nil;
+            
+            if (error) {
+                NSLog(@"[Ve] iTunes API request failed: %@", error.localizedDescription);
+            } else {
+                NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+                if (httpResponse.statusCode == 200 && data) {
+                    NSError *parseError;
+                    NSDictionary *responseDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseError];
+                    
+                    if (!parseError && responseDict) {
+                        NSArray *results = responseDict[@"results"];
+                        if (results && results.count > 0) {
+                            NSDictionary *appInfo = results[0];
+                            
+                            // Try different icon sizes (prefer higher resolution)
+                            iconURL = appInfo[@"artworkUrl512"] ?: 
+                                     appInfo[@"artworkUrl100"] ?: 
+                                     appInfo[@"artworkUrl60"];
+                            
+                            if (iconURL) {
+                                NSLog(@"[Ve] Found icon URL for %@: %@", bundleIdentifier, iconURL);
+                                // Cache the result
+                                self.iTunesAPICache[bundleIdentifier] = iconURL;
+                            } else {
+                                NSLog(@"[Ve] No icon URL found in iTunes API response for %@", bundleIdentifier);
+                                // Cache empty result to avoid future requests for system apps
+                                self.iTunesAPICache[bundleIdentifier] = @"";
+                            }
+                        } else {
+                            NSLog(@"[Ve] No results found in iTunes API response for %@", bundleIdentifier);
+                            // Cache empty result to avoid future requests for non-App Store apps
+                            self.iTunesAPICache[bundleIdentifier] = @"";
+                        }
+                    } else {
+                        NSLog(@"[Ve] Failed to parse iTunes API response: %@", parseError.localizedDescription);
+                    }
+                } else {
+                    NSLog(@"[Ve] iTunes API returned status code: %ld for %@", (long)httpResponse.statusCode, bundleIdentifier);
+                }
+            }
+            
+            // Call completion on main queue
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(iconURL);
+            });
+        }];
+        
+        [task resume];
+    });
+}
+
+- (void)clearITunesAPICache {
+    [self.iTunesAPICache removeAllObjects];
+    NSLog(@"[Ve] iTunes API cache cleared");
 }
 
 @end
