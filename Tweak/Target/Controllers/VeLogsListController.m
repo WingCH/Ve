@@ -25,9 +25,6 @@
 
     load_preferences();
 
-    // 只在用戶啟用生物識別保護時才要求驗證
-    [self setWantsAuth:pfUseBiometricProtection];
-
     [self setSearchController:[[UISearchController alloc] init]];
     [[[self searchController] searchBar] setDelegate:self];
     [[self searchController] setObscuresBackgroundDuringPresentation:NO];
@@ -217,11 +214,9 @@ static void load_preferences() {
     preferences = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
 
     [preferences registerDefaults:@{
-        kPreferenceKeySorting: kPreferenceKeySortingDefaultValue,
-        kPreferenceKeyUseBiometricProtection: @(kPreferenceKeyUseBiometricProtectionDefaultValue)
+        kPreferenceKeySorting: kPreferenceKeySortingDefaultValue
     }];
 
     pfSorting = [preferences objectForKey:kPreferenceKeySorting];
-    pfUseBiometricProtection = [[preferences objectForKey:kPreferenceKeyUseBiometricProtection] boolValue];
 }
 @end

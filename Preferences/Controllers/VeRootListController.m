@@ -7,7 +7,6 @@
 
 #include "VeRootListController.h"
 #import <Preferences/PSSpecifier.h>
-#import <LocalAuthentication/LocalAuthentication.h>
 #import <rootless.h>
 #import "../PreferenceKeys.h"
 #import "../NotificationKeys.h"
@@ -39,19 +38,6 @@
     if ([[specifier propertyForKey:@"key"] isEqualToString:kPreferenceKeyEnabled]) {
 		[self promptToRespring];
     }
-
-	if ([[specifier propertyForKey:@"key"] isEqualToString:kPreferenceKeyUseBiometricProtection]) {
-		LAContext* laContext = [[LAContext alloc] init];
-        [laContext evaluatePolicy:LAPolicyDeviceOwnerAuthentication localizedReason:@"Vē needs to make sure you're permitted to toggle biometric protection." reply:^(BOOL success, NSError* _Nullable error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (!success) {
-					NSUserDefaults* userDefaults = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
-					[userDefaults setBool:![[userDefaults objectForKey:kPreferenceKeyUseBiometricProtection] boolValue] forKey:kPreferenceKeyUseBiometricProtection];
-                    [self reloadSpecifiers];
-                }
-            });
-        }];
-	}
 }
 
 /**

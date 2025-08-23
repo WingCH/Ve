@@ -13,7 +13,6 @@ static NSString* const kPreferenceKeySaveLocalAttachments = @"SaveLocalAttachmen
 static NSString* const kPreferenceKeySaveRemoteAttachments = @"SaveRemoteAttachments";
 static NSString* const kPreferenceKeyLogWithoutContent = @"LogWithoutContent";
 static NSString* const kPreferenceKeyBlockedSenders = @"BlockedSenders";
-static NSString* const kPreferenceKeyUseBiometricProtection = @"UseBiometricProtection";
 static NSString* const kPreferenceKeyAutomaticallyDeleteLogs = @"AutomaticallyDeleteLogs";
 static NSString* const kPreferenceKeyUseAmericanDateFormat = @"UseAmericanDateFormat";
 static NSString* const kPreferenceKeyBarkForwardingEnabled = @"BarkForwardingEnabled";
@@ -32,7 +31,6 @@ static BOOL const kPreferenceKeyLogWithoutContentDefaultValue = YES;
 static inline NSArray* kPreferenceKeyBlockedSendersDefaultValue(void) {
     return @[];
 }
-static BOOL const kPreferenceKeyUseBiometricProtectionDefaultValue = NO;
 static BOOL const kPreferenceKeyAutomaticallyDeleteLogsDefaultValue = YES;
 static BOOL const kPreferenceKeyUseAmericanDateFormatDefaultValue = NO;
 static BOOL const kPreferenceKeyBarkForwardingEnabledDefaultValue = NO;
