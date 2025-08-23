@@ -301,11 +301,11 @@
 			<key>cellClass</key>
 			<string>LinkCell</string>
 			<key>label</key>
-			<string>My Tweaks</string>
+			<string>My Projects</string>
 			<key>subtitle</key>
-			<string>Check out my other work.</string>
+			<string>Check out my GitHub repository.</string>
 			<key>url</key>
-			<string>https://akarii.cafe/user/AlexandraAurora</string>
+			<string>https://github.com/WingCH/Ve</string>
 			<key>height</key>
 			<integer>54</integer>
 		</dict>
@@ -317,19 +317,7 @@
 			<key>subtitle</key>
 			<string>Find it on my GitHub.</string>
 			<key>url</key>
-			<string>https://github.com/AlexandraAurora/Ve</string>
-			<key>height</key>
-			<integer>54</integer>
-		</dict>
-		<dict>
-			<key>cellClass</key>
-			<string>LinkCell</string>
-			<key>label</key>
-			<string>Donate</string>
-			<key>subtitle</key>
-			<string>Let me know that you like what I do.</string>
-			<key>url</key>
-			<string>https://ko-fi.com/AlexandraAurora</string>
+			<string>https://github.com/WingCH/Ve</string>
 			<key>height</key>
 			<integer>54</integer>
 		</dict>

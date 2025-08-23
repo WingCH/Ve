@@ -95,19 +95,9 @@
  * Fetches the url for the user's avatar.
  */
 - (void)fetchAvatarUrlWithCompletion:(void (^)(NSURL* avatarUrl))completion {
-    NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"https://api.akarii.cafe/v1/user/%@", [self username]]];
-
-    NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData* _Nullable data, NSURLResponse* _Nullable response, NSError* _Nullable error) {
-        @try {
-            NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-            NSURL* avatarUrl = [NSURL URLWithString:json[@"avatar_url"]];
-            completion(avatarUrl);
-        } @catch (NSException* exception) {
-            completion(nil);
-        }
-    }];
-
-    [task resume];
+    // Use GitHub avatar API directly
+    NSURL* avatarUrl = [NSURL URLWithString:[NSString stringWithFormat:@"https://github.com/%@.png?size=200", [self username]]];
+    completion(avatarUrl);
 }
 
 /**
@@ -133,7 +123,7 @@
  * Opens the user's profile.
  */
 - (void)openUserProfile {
-    NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"https://akarii.cafe/user/%@", [self username]]];
+    NSURL* url = [NSURL URLWithString:@"https://github.com/WingCH/Ve"];
     [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
 }
 @end
