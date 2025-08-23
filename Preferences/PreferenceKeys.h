@@ -17,6 +17,7 @@ static NSString* const kPreferenceKeyAutomaticallyDeleteLogs = @"AutomaticallyDe
 static NSString* const kPreferenceKeyUseAmericanDateFormat = @"UseAmericanDateFormat";
 static NSString* const kPreferenceKeyBarkForwardingEnabled = @"BarkForwardingEnabled";
 static NSString* const kPreferenceKeyBarkAPIKey = @"BarkAPIKey";
+static NSString* const kPreferenceKeyBarkEncryptionKey = @"BarkEncryptionKey";
 static NSString* const kPreferenceKeySorting = @"Sorting";
 
 static NSString* const kPreferenceKeySortingApplication = @"Application";
@@ -35,4 +36,5 @@ static BOOL const kPreferenceKeyAutomaticallyDeleteLogsDefaultValue = YES;
 static BOOL const kPreferenceKeyUseAmericanDateFormatDefaultValue = NO;
 static BOOL const kPreferenceKeyBarkForwardingEnabledDefaultValue = NO;
 static NSString* const kPreferenceKeyBarkAPIKeyDefaultValue = @"";
+static NSString* const kPreferenceKeyBarkEncryptionKeyDefaultValue = @"";
 static NSString* const kPreferenceKeySortingDefaultValue = kPreferenceKeySortingDate;
