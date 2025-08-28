@@ -141,7 +141,7 @@ The project follows a modular architecture with five main components:
 ### Project Configuration
 - **Package**: codes.wingchan.ve-enhanced
 - **Name**: VE Enhanced
-- **Version**: 2.0
+- **Version**: 2.1
 - **Architecture**: iphoneos-arm64 (supports arm64/arm64e)
 - **Dependencies**: firmware (>= 14.0), mobilesubstrate, preferenceloader
 - **Scheme**: Rootless package format for modern jailbreaks

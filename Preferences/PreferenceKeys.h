@@ -18,6 +18,7 @@ static NSString* const kPreferenceKeyUseAmericanDateFormat = @"UseAmericanDateFo
 static NSString* const kPreferenceKeyBarkForwardingEnabled = @"BarkForwardingEnabled";
 static NSString* const kPreferenceKeyBarkAPIKey = @"BarkAPIKey";
 static NSString* const kPreferenceKeyBarkEncryptionKey = @"BarkEncryptionKey";
+static NSString* const kPreferenceKeyBarkDomain = @"BarkDomain";
 static NSString* const kPreferenceKeySorting = @"Sorting";
 
 static NSString* const kPreferenceKeySortingApplication = @"Application";
@@ -37,4 +38,5 @@ static BOOL const kPreferenceKeyUseAmericanDateFormatDefaultValue = NO;
 static BOOL const kPreferenceKeyBarkForwardingEnabledDefaultValue = NO;
 static NSString* const kPreferenceKeyBarkAPIKeyDefaultValue = @"";
 static NSString* const kPreferenceKeyBarkEncryptionKeyDefaultValue = @"";
+static NSString* const kPreferenceKeyBarkDomainDefaultValue = @"https://api.day.app";
 static NSString* const kPreferenceKeySortingDefaultValue = kPreferenceKeySortingDate;

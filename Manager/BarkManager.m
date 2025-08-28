@@ -97,7 +97,11 @@
                             bulletinID:(NSString *)bulletinID
                                iconURL:(NSString *)iconURL
                          encryptionKey:(NSString *)encryptionKey {
-    NSString* baseURL = @"https://api.day.app";
+    NSUserDefaults* preferences = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
+    NSString* baseURL = [preferences objectForKey:kPreferenceKeyBarkDomain];
+    if (!baseURL || [baseURL length] == 0) {
+        baseURL = kPreferenceKeyBarkDomainDefaultValue;
+    }
     NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", baseURL, apiKey]];
     
     if (!url) {
