@@ -8,6 +8,7 @@
 #import "LogManager.h"
 #import "Log.h"
 #import "../Utils/ImageUtil.h"
+#import "../Utils/JailbreakPath.h"
 #import "../Utils/StringUtil.h"
 #import "../Utils/DateUtil.h"
 #import "../Preferences/NotificationKeys.h"
@@ -19,14 +20,14 @@
  * Returns the logs file path.
  */
 + (NSString *)logsPath {
-    return ROOT_PATH_NS(@"/var/mobile/Library/codes.wingchan.ve-enhanced/logs.json");
+    return VEJailbreakRootPath(@"/var/mobile/Library/codes.wingchan.ve-enhanced/logs.json");
 }
 
 /**
  * Returns the logs attachment directory path.
  */
 + (NSString *)logsAttachmentPath {
-    return ROOT_PATH_NS(@"/var/mobile/Library/codes.wingchan.ve-enhanced/attachments/");
+    return VEJailbreakRootPath(@"/var/mobile/Library/codes.wingchan.ve-enhanced/attachments/");
 }
 
 /**

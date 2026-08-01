@@ -26,12 +26,26 @@ This is a fork of [Ve](https://github.com/rrk567301/Ve) with added notification 
 4. Optionally set an encryption key for secure forwarding
 
 ## Compatibility
-iPhone, iPad and iPod touch running iOS/iPadOS 14 or later with rootless jailbreak.
+
+- 標準 rootless：支援 iOS/iPadOS 14 或以上，package architecture 為 `iphoneos-arm64`。
+- Relaxin／RootHide：自 v2.2 起支援，使用獨立 `roothide` scheme 產生 `iphoneos-arm64e` package，並已完成 Relaxin 真機實驗驗證。
+- 標準 rootless 與 Relaxin packages 不可互換；安裝前必須核對 `.deb` 的 architecture。
 
 ## Compiling
-- [Theos](https://theos.dev/) is required to compile the project
-- Edit the root `Makefile` to use your Theos SDK
-- Run `make package` to build
+
+每次切換 package scheme 前都必須 clean，並保留兩個獨立 release artifacts：
+
+```sh
+# 標準 rootless；使用 upstream Theos
+make clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+
+# Relaxin／RootHide；必須使用 roothide/theos
+THEOS=/absolute/path/to/roothide-theos make clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+```
+
+RootHide build 需要 [roothide/theos](https://github.com/roothide/theos)，不能由只含 `rootless` scheme 的 upstream Theos 產生。兩個 `.deb` 應在 release 名稱中清楚標示 `rootless` 或 `roothide-relaxin`，避免安裝錯誤版本。
+
+詳細技術依據、限制與真機 smoke-test 清單見 [Relaxin jailbreak 相容性研究](docs/relaxin-jailbreak-research.md)。
 
 ## Credits
 - **Original Project**: [Ve by Alexandra Aurora Göttlicher, 74k1_](https://github.com/rrk567301/Ve)

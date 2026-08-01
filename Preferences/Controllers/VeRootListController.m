@@ -7,10 +7,10 @@
 
 #include "VeRootListController.h"
 #import <Preferences/PSSpecifier.h>
-#import <rootless.h>
 #import "../PreferenceKeys.h"
 #import "../NotificationKeys.h"
 #import "../../Manager/LogManager.h"
+#import "../../Utils/JailbreakPath.h"
 
 @implementation VeRootListController
 /**
@@ -63,7 +63,7 @@
  */
 - (void)respring {
 	NSTask* task = [[NSTask alloc] init];
-	[task setLaunchPath:ROOT_PATH_NS(@"/usr/bin/killall")];
+	[task setLaunchPath:VEJailbreakRootPath(@"/usr/bin/killall")];
 	[task setArguments:@[@"backboardd"]];
 	[task launch];
 }

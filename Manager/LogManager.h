@@ -6,7 +6,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <rootless.h>
 
 @class Log;
 @class BBBulletin;
