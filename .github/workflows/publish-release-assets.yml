@@ -33,7 +33,7 @@ jobs:
             codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb \
             SHA256SUMS-2.2.1.txt; do
             gh api "repos/$GH_REPO/contents/$asset?ref=$ASSET_SOURCE_SHA" \
-              -H 'Accept: application/vnd.github.raw+json' > "$asset"
+              --jq '.content' | base64 --decode > "$asset"
           done
           printf '%s  %s\n' \
             cba49b4de6888bbbecd6c46504d5012a927f4c593f3bb4c8be98ba2e776f7acc \
