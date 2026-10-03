@@ -58,6 +58,8 @@ bash tests/notification-replay-test.sh
 
 通知重播測試會先儲存通知，再由另一個 process 讀取，驗證重啟後的重播、通知更新及同一時間的不同通知。此測試需要 macOS Foundation，或 Linux 的 Clang、GNUstep Foundation 及 Objective-C development headers；非標準安裝可用 `GNUSTEP_PREFIX` 和 `OBJC_INCLUDE_DIR` 指定路徑。
 
+2.2.3 改用穩定的 publisher ID 比對 respring 重播，並保留新內容、新日期及不同通知的正常轉發。指定 vphone 的實際通知／HTTP 驗證已通過；詳見 [重播修正及驗證](docs/respring-notification-replay.md)。
+
 ## Credits
 - **Original Project**: [Ve by Alexandra Aurora Göttlicher, 74k1_](https://github.com/rrk567301/Ve)
 - **Enhanced by**: Wing CHAN
