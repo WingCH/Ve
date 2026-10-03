@@ -1,0 +1,53 @@
+name: Publish 2.2.1 release assets
+
+on:
+  push:
+    branches:
+      - release-artifacts/2.2.1
+    paths:
+      - .github/workflows/publish-release-assets.yml
+      - codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb
+      - codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb
+      - SHA256SUMS-2.2.1.txt
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ASSET_SOURCE_SHA: ${{ github.sha }}
+    steps:
+      - name: Download and verify existing release packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ve-2.2.1-release"
+          cd "$RUNNER_TEMP/ve-2.2.1-release"
+          for asset in \
+            codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb \
+            codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb \
+            SHA256SUMS-2.2.1.txt; do
+            gh api "repos/$GH_REPO/contents/$asset?ref=$ASSET_SOURCE_SHA" \
+              -H 'Accept: application/vnd.github.raw+json' > "$asset"
+          done
+          printf '%s  %s\n' \
+            cba49b4de6888bbbecd6c46504d5012a927f4c593f3bb4c8be98ba2e776f7acc \
+            codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb \
+            e9c39377cac8f05ad11eb42dd513ffeba49e0c92aace06fe2bf5e3a667ea1f65 \
+            codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb | sha256sum --check --strict
+          sha256sum --check --strict SHA256SUMS-2.2.1.txt
+
+      - name: Upload verified files to the existing release
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/ve-2.2.1-release"
+          gh release upload 2.2.1 \
+            codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb \
+            codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb \
+            SHA256SUMS-2.2.1.txt

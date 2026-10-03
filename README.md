@@ -1,34 +1,71 @@
 # VE Enhanced 2.2.1
 
-修正重新開機／respring 後，已記錄的相同通知被重複轉發至 Bark。通知內容、標題、副標題或版本有更新時仍然會處理；同一時間來自不同 app 或不同通知 ID 的訊息亦不會被當成相同通知。
+正式發佈：[GitHub Release 2.2.1](https://github.com/WingCH/Ve/releases/tag/2.2.1)。
 
-Source tag: [2.2.1](https://github.com/WingCH/Ve/tree/2.2.1)
-Source commit: [4b1a6be8872f18375d149c7c203caba099931329](https://github.com/WingCH/Ve/commit/4b1a6be8872f18375d149c7c203caba099931329)
+# English
+
+## What's New
+
+- Fixed duplicate Bark forwarding after reboot or respring for unchanged notifications already present in saved history.
+- Preserved forwarding for notification updates and distinct notifications that share a timestamp.
+- Improved notification matching using the app, timestamp, content, and available bulletin identifiers.
+- Added a notification-replay regression test that reloads saved history in a separate process.
 
 ## Downloads
 
-| 環境 | Package architecture | 套件 |
-| --- | --- | --- |
-| 標準 rootless | `iphoneos-arm64` | [下載 rootless .deb](https://github.com/WingCH/Ve/raw/refs/heads/release-artifacts/2.2.1/codes.wingchan.ve-enhanced_2.2.1_rootless_iphoneos-arm64.deb) |
-| RootHide／Relaxin | `iphoneos-arm64e` | [下載 RootHide／Relaxin .deb](https://github.com/WingCH/Ve/raw/refs/heads/release-artifacts/2.2.1/codes.wingchan.ve-enhanced_2.2.1_roothide-relaxin_iphoneos-arm64e.deb) |
+- `codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb` — For standard rootless jailbreaks.
+- `codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb` — For Relaxin and RootHide.
 
-兩個套件不可互換。安裝前請核對 jailbreak 類型及 package architecture。SHA-256 校驗碼見 [SHA256SUMS](SHA256SUMS)。
+> These packages are not interchangeable. Choose the package that matches your device's package architecture.
 
-## Validation and limits
+## Verification
 
-- 通知重播測試：在獨立 process 重新讀取 JSON 歷史，直接執行 production 通知比對 helper，15 個 assertions 通過。
-- Bootstrap command resolver、installer integration 及 Relaxin support contract 三組現有測試通過；installer 使用 mocked SSH。
-- Rootless 和 RootHide 均由此 source commit clean build；每個套件的三個 Mach-O binaries 均含 arm64／arm64e，六個 slice 的簽章 hash、套件 layout、ownership、permissions 及 plists 檢查通過。
-- 此版本未在真機測試 SpringBoard／Preferences 載入、Bark 實際轉發或重新開機。重播辨識依賴保留的通知歷史；被清除或因記錄上限而移除的通知不再有可比對的紀錄。
-- 套件由 Linux 建置，arm64e 使用 Theos 文件建議的 allemande ABI 轉換；轉換及套件檢查並不保證真機 runtime 相容性。
+- Both release packages passed clean-build, metadata, payload, Mach-O architecture, code-signature hash, and checksum verification.
+- The resolver, support-contract, mocked-installer, and notification-replay tests all passed. The replay test passed 15 assertions after reloading history in a separate process.
+- Real-device reboot, Bark forwarding, and SpringBoard/Preferences loading have not been tested for this version. The Linux builds use allemande for arm64e ABI conversion; runtime compatibility still needs device verification.
+- Replay detection depends on retained notification history. Notifications removed by clearing history or the log limit can no longer be matched.
 
-## Build provenance
+## SHA-256
 
-- iPhoneOS SDK: 16.5; deployment target: iOS 14.0; Clang: 13.0.0 (Swift 5.8 Linux toolchain).
-- Upstream Theos: `dd5c14bb9d91311e221d51b5bfb8c9e5948156db`.
-- RootHide Theos: `88506b2c22e9e07dd4ed055f23c9e398a117a2c7`.
-- Allemande: `43b2ca59ad3f6a55735b1f7b5cba8c34b55bd8f9`.
-- `FINALPACKAGE=1`; independent `rootless` and `roothide` package schemes; generated staging permissions normalized before packaging.
-- License: GPL-3.0; see [COPYING](COPYING) and the source tag above.
+`cba49b4de6888bbbecd6c46504d5012a927f4c593f3bb4c8be98ba2e776f7acc`  
+`codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb`
 
-此分支保存下載套件。[GitHub Release 2.2.1](https://github.com/WingCH/Ve/releases/tag/2.2.1) 已發佈。此雲端環境的 GitHub Release 資產上載介面回報 HTTP 400 `Bad Content-Length`，所以 Release 頁面提供此分支的套件下載連結。
+`e9c39377cac8f05ad11eb42dd513ffeba49e0c92aace06fe2bf5e3a667ea1f65`  
+`codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb`
+
+See the [Relaxin jailbreak compatibility research](https://github.com/WingCH/Ve/blob/2.2.1/docs/relaxin-jailbreak-research.md) for technical details and the regression checklist.
+
+---
+
+# 中文
+
+## 更新內容
+
+- 修正重新開機／respring 後，已儲存於歷史記錄的相同通知被重複轉發至 Bark 的問題。
+- 保留通知更新及同一時間不同通知的正常轉發。
+- 改善通知比對，使用 app、時間、內容及可用的 bulletin identifiers 辨識相同通知。
+- 新增通知重播回歸測試，由另一個 process 重新讀取已儲存的歷史記錄。
+
+## 下載
+
+- `codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb` — 適用於標準 rootless jailbreak。
+- `codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb` — 適用於 Relaxin／RootHide。
+
+> 兩個 packages 不可互換，請按裝置上的 package architecture 選擇。
+
+## 驗證
+
+- 兩個 release packages 均已完成 clean build、metadata、payload、Mach-O architecture、code-signature hash 與 checksum 驗證。
+- Resolver、support contract、mocked installer 及通知重播測試全部通過；重播測試在另一個 process 重新讀取歷史記錄後，15 個 assertions 通過。
+- 此版本尚未測試真機重新開機、Bark 實際轉發及 SpringBoard／Preferences 載入。Linux 建置使用 allemande 轉換 arm64e ABI，runtime 相容性仍需真機驗證。
+- 重播辨識依賴保留的通知歷史；被清除或因記錄上限而移除的通知不再有可比對的紀錄。
+
+## SHA-256
+
+`cba49b4de6888bbbecd6c46504d5012a927f4c593f3bb4c8be98ba2e776f7acc`  
+`codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64.deb`
+
+`e9c39377cac8f05ad11eb42dd513ffeba49e0c92aace06fe2bf5e3a667ea1f65`  
+`codes.wingchan.ve-enhanced_2.2.1_iphoneos-arm64e.deb`
+
+詳細限制與回歸測試清單見 [Relaxin jailbreak 相容性研究](https://github.com/WingCH/Ve/blob/2.2.1/docs/relaxin-jailbreak-research.md)。
