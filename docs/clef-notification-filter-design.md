@@ -1,6 +1,6 @@
 # Clef 通知篩選設計
 
-設計日期：2026-10-03。實作更新：2026-10-04。狀態：**已實作，指定 vphone 的 HTTP protocol fixture 與 UI 回歸已通過；正式 artifact 的 smoke test 與 GitHub 交付進行中。真實 Clef／Jev 判斷準確率尚未驗證。**
+設計日期：2026-10-03。實作更新：2026-10-04。狀態：**已實作，雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查，指定 vphone 的正式 artifact HTTP／UI 回歸已通過。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
 
 ## 已確認的需求
 
@@ -86,3 +86,5 @@ Jev 的 endpoint 與模型別名已核對。原文：「POST https://api.typesaf
 測試曾發現新增 plist 的 `keyboard` 使用 NSNumber，導致 `keyboardTypeForString:` 收到錯誤型別。已改為字串，補 schema regression，並成功載入及操作設定頁。此為本輪發現並修正的實作錯誤；不把該次 crash 當成舊 Safe Mode 根因。
 
 Rootless／RootHide candidate 的 arm64／arm64e ABI、簽署及保存 dSYM UUID 已通過。標準 rootless 實機、正式服務認證及真實模型辨識品質仍未測，不沿用舊版本 runtime 成功旗標。
+
+正式 package 來源 commit：`d8c6105344fa2863872bb73596b9b8ea2a41b2bf`。Rootless SHA-256：`101c4e9ad44a0fc64e4f8a236a4d6d131930b7d2d1ed2a13f1299689a0e72d7c`；RootHide SHA-256：`67b61fcd0210fa25a5040ee7975cac43c040535b1375d82ff5f0c1458550ffa2`。最終讀回原文：「"matches_prior": true」— [guest 設定還原](/Users/wingchan/Project/Ve/packages/native-release-2.3.0/guest/preferences-restored.json)。此結果確認測試前設定已還原；新版 Ve 保留在指定 guest，臨時通知 App 已移除。
