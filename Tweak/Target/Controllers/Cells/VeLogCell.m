@@ -7,6 +7,7 @@
 
 #import "VeLogCell.h"
 #import "../../../../Manager/Log.h"
+#import "../../../../Manager/VEAIPolicy.h"
 #import "../../../../PrivateHeaders.h"
 
 @implementation VeLogCell
@@ -69,6 +70,19 @@
 			[[[self logContentLabel] leadingAnchor] constraintEqualToAnchor:[[self iconImageView] trailingAnchor] constant:10],
 			[[[self logContentLabel] trailingAnchor] constraintEqualToAnchor:[self trailingAnchor] constant:-32]
 		]];
+        self.aiStatusLabel = [UILabel new];
+        NSString *summary = [VEAIPolicy summaryForInfo:self.log.aiInfo];
+        if (self.log.correction) summary = [summary stringByAppendingString:[self.log.correction[@"should_forward"] boolValue] ? @" · 修正：應轉發" : @" · 修正：不應轉發"];
+        self.aiStatusLabel.text = summary;
+        self.aiStatusLabel.textColor = [UIColor secondaryLabelColor];
+        self.aiStatusLabel.font = [UIFont systemFontOfSize:11];
+        self.aiStatusLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:self.aiStatusLabel];
+        [NSLayoutConstraint activateConstraints:@[
+            [self.aiStatusLabel.topAnchor constraintEqualToAnchor:self.logContentLabel.bottomAnchor constant:3],
+            [self.aiStatusLabel.leadingAnchor constraintEqualToAnchor:self.logContentLabel.leadingAnchor],
+            [self.aiStatusLabel.trailingAnchor constraintEqualToAnchor:self.logContentLabel.trailingAnchor]
+        ]];
 	}
 
 	return self;

@@ -11,6 +11,9 @@ static NSString* const kLogsKeyLogs = @"logs";
 static NSString* const kLogsKeyLastIdentifier = @"last_identifier";
 static NSString* const kLogsKeyLastHousekeepingDate = @"last_housekeeping_date";
 static NSString* const kLogKeyIdentifier = @"identifier";
+static NSString* const kLogKeyRecordID = @"record_id";
+static NSString* const kLogKeyAI = @"ai";
+static NSString* const kLogKeyCorrection = @"correction";
 static NSString* const kLogKeyBundleIdentifier = @"bundle_identifier";
 static NSString* const kLogKeyTitle = @"title";
 static NSString* const kLogKeySubtitle = @"subtitle";
@@ -36,6 +39,9 @@ static NSString* const kLogInternalDateFormat = @"yyyy-MM-dd'T'HH:mm:ss.SSS";
 @interface Log : NSObject
 // Basic properties
 @property(nonatomic, assign)NSUInteger identifier;
+@property(nonatomic, copy)NSString* recordID;
+@property(nonatomic, copy)NSDictionary* aiInfo;
+@property(nonatomic, copy)NSDictionary* correction;
 @property(nonatomic)NSString* bundleIdentifier;
 @property(nonatomic)NSString* title;
 @property(nonatomic)NSString* subtitle;

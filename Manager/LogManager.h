@@ -22,6 +22,8 @@
 + (instancetype)sharedInstance;
 // Returns NO for an unchanged notification already present in the saved logs.
 - (BOOL)addLogForBulletin:(BBBulletin *)bulletin;
+- (BOOL)addLogForBulletin:(BBBulletin *)bulletin recordID:(NSString **)recordID;
+- (Log *)logForRecordID:(NSString *)recordID;
 - (void)removeLog:(Log *)log;
 - (void)removeAllLogs;
 - (NSArray *)getAttachmentsForLog:(Log *)log;

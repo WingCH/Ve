@@ -133,6 +133,9 @@
     NSDate* expirationDate = dictionary[kLogKeyExpirationDate] ? [DateUtil getDateFromString:dictionary[kLogKeyExpirationDate] withFormat:kLogInternalDateFormat] : nil;
     
     Log* log = [[Log alloc] initWithIdentifier:identifier bundleIdentifier:bundleIdentifier title:title content:content andDate:date];
+    log.recordID = dictionary[kLogKeyRecordID];
+    log.aiInfo = dictionary[kLogKeyAI];
+    log.correction = dictionary[kLogKeyCorrection];
     
     // Set additional properties
     [log setSubtitle:subtitle];

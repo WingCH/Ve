@@ -9,6 +9,7 @@ This is a fork of [Ve](https://github.com/rrk567301/Ve) with added notification 
 - **iTunes API Integration**: Fetch app icons automatically for forwarded notifications
 - **Enhanced Security**: Encrypted message forwarding with custom keys
 - **Smart Filtering**: Advanced notification level mapping (Active/Passive)
+- **可選 AI 篩選**：支援 Clef／Jev 的 System One 協定、自訂 provider endpoint／prompt、逐條人工修正與後續 context。
 
 ## Preview
 <img src="Preview.png" alt="Preview" />
@@ -24,6 +25,16 @@ This is a fork of [Ve](https://github.com/rrk567301/Ve) with added notification 
 2. Enable "Bark Forwarding" 
 3. Enter your Bark API Key
 4. Optionally set an encryption key for secure forwarding
+
+### AI 判斷與人工修正（2.3.0）
+
+在 Settings → Notifications → **VE Enhanced 設定** 開啟 AI 區域；同頁 **Notification Logs** 可查看判斷及修正。既有 PreferenceLoader 入口仍保留。
+
+AI 是可選功能。未設定 token 或關閉 AI 時，直接沿用 Bark。啟用後預設先觀察；你可切換至攔截模式，調整等待秒數與略過門檻。Cloudflare 可選 Clef／Clef-flash，Jev／System One 可設定模型名稱、完整 endpoint URL 與各自 token。
+
+全域 prompt 可編輯及還原。每次判斷帶同一 App 最近 10 條人工修正，最新版 prompt 優先。紀錄保存 AI 原判斷、轉發動作及人工標籤；修正不自動補發。刪除通知仍保留修正例子，可另外清除；Reset All Data 會清除它們。
+
+本輪 vphone 測到的是實際通知／HTTP／UI，模型回覆使用本機 fixture。真實 Clef／Jev 的判斷準確率與 rootless 實機仍待驗證。[設計及驗證界線](docs/clef-notification-filter-design.md)。
 
 ## Compatibility
 
@@ -54,6 +65,8 @@ bash tests/resolve-bootstrap-command-test.sh
 bash tests/install-to-device-test.sh
 bash tests/relaxin-support-contract-test.sh
 bash tests/notification-replay-test.sh
+bash tests/ai-filter-test.sh
+python3 tests/ai-settings-contract-test.py
 ```
 
 通知重播測試會先儲存通知，再由另一個 process 讀取，驗證重啟後的重播、通知更新及同一時間的不同通知。此測試需要 macOS Foundation，或 Linux 的 Clang、GNUstep Foundation 及 Objective-C development headers；非標準安裝可用 `GNUSTEP_PREFIX` 和 `OBJC_INCLUDE_DIR` 指定路徑。

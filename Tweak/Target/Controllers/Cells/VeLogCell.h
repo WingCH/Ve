@@ -13,5 +13,6 @@
 @property(nonatomic)UIImageView* iconImageView;
 @property(nonatomic)UILabel* logTitleLabel;
 @property(nonatomic)UILabel* logContentLabel;
+@property(nonatomic)UILabel* aiStatusLabel;
 @property(nonatomic)Log* log;
 @end

@@ -9,6 +9,7 @@
 #import <substrate.h>
 #import "../../Manager/LogManager.h"
 #import "../../Manager/BarkManager.h"
+#import "../../Manager/VEAIManager.h"
 #import "../../Preferences/PreferenceKeys.h"
 #import "../../Preferences/NotificationKeys.h"
 #import "../../PrivateHeaders.h"
@@ -43,20 +44,19 @@ static void override_BBServer_publishBulletin_destinations(BBServer* self, SEL _
 	BarkNotificationLevel level = bulletinIDExists ? BarkNotificationLevelPassive : BarkNotificationLevelActive;
 	
 	// Replayed notifications must not reach Bark, even at the passive level.
-	if (![[LogManager sharedInstance] addLogForBulletin:bulletin]) {
+    NSString *recordID;
+	if (![[LogManager sharedInstance] addLogForBulletin:bulletin recordID:&recordID]) {
 		return;
 	}
 	
 	NSLog(@"[Ve] BulletinID: %@, Exists: %@, Level: %@", bulletinID ?: @"nil", bulletinIDExists ? @"YES" : @"NO", level == BarkNotificationLevelActive ? @"active" : @"passive");
 	
-	// Use notification title directly, app icon will be fetched automatically
-	[[BarkManager sharedInstance] forwardNotificationWithTitle:[bulletin title]
-													  subtitle:nil
-														  body:[bulletin message]
-											  bundleIdentifier:[bulletin sectionID]
-														 level:level
-													  threadID:[bulletin threadID]
-													bulletinID:bulletinID];
+    NSDictionary *snapshot = @{
+        @"title": [[bulletin title] copy] ?: @"", @"content": [[bulletin message] copy] ?: @"",
+        @"bundle_identifier": [[bulletin sectionID] copy] ?: @"", @"thread_id": [[bulletin threadID] copy] ?: @"",
+        @"bulletin_id": [bulletinID copy] ?: @""
+    };
+    [[VEAIManager sharedInstance] processRecordID:recordID notification:snapshot level:level];
 }
 
 #pragma mark - Preferences

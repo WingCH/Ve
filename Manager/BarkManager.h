@@ -6,7 +6,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "../PrivateHeaders.h"
 
 typedef NS_ENUM(NSInteger, BarkNotificationLevel) {
     BarkNotificationLevelActive = 0,    // Default level
@@ -26,6 +25,14 @@ typedef NS_ENUM(NSInteger, BarkNotificationLevel) {
                                level:(BarkNotificationLevel)level
                             threadID:(NSString *)threadID
                           bulletinID:(NSString *)bulletinID;
+- (void)forwardNotificationWithTitle:(NSString *)title
+                            subtitle:(NSString *)subtitle
+                                body:(NSString *)body
+                    bundleIdentifier:(NSString *)bundleIdentifier
+                               level:(BarkNotificationLevel)level
+                            threadID:(NSString *)threadID
+                          bulletinID:(NSString *)bulletinID
+                          completion:(void (^)(NSString *status))completion;
 
 // Convenience method to generate bulletinID based on notification content
 - (NSString *)generateBulletinIDForBundleIdentifier:(NSString *)bundleIdentifier

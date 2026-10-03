@@ -42,7 +42,7 @@
     [specifier setProperty:[VeLogCell class] forKey:@"cellClass"];
     [specifier setProperty:NSStringFromSelector(@selector(removedSpecifier:)) forKey:PSDeletionActionKey];
     [specifier setProperty:@(YES) forKey:@"enabled"];
-    [specifier setProperty:@(60) forKey:@"height"];
+    [specifier setProperty:@(80) forKey:@"height"];
     [specifier setProperty:log forKey:@"log"];
     return specifier;
 }

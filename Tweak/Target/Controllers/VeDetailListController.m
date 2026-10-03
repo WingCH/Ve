@@ -10,6 +10,9 @@
 #import <Preferences/PSSpecifier.h>
 #import "../../../Manager/LogManager.h"
 #import "../../../Manager/Log.h"
+#import "../../../Manager/VEAIPolicy.h"
+#import "../../../Manager/VEAIStore.h"
+#import "../../../Manager/VEAIManager.h"
 #import "VeAttachmentListController.h"
 #import "../Controllers/Cells/VeDetailCell.h"
 #import "../Controllers/Cells/VeAttachmentCell.h"
@@ -27,7 +30,7 @@
     load_preferences();
 
     [self setLog:[[self specifier] propertyForKey:@"log"]];
-    [self loadSpecifiers];
+    [self reloadSpecifiers];
 }
 
 /**
@@ -40,6 +43,7 @@
  */
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    [self reloadSpecifiers];
 
     [self setRemoveButton:[[UIButton alloc] init]];
     [[self removeButton] setImage:[[UIImage systemImageNamed:@"minus.circle"] imageWithConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:23 weight:UIImageSymbolWeightRegular]] forState:UIControlStateNormal];
@@ -59,8 +63,15 @@
  * @return The specifiers.
  */
 - (NSArray *)specifiers {
-    _specifiers = [[NSMutableArray alloc] init];
+    if (!_specifiers) [self loadSpecifiers];
 	return _specifiers;
+}
+
+- (void)reloadSpecifiers {
+    Log *fresh = [[LogManager sharedInstance] logForRecordID:self.log.recordID];
+    if (fresh) self.log = fresh;
+    _specifiers = nil;
+    [super reloadSpecifiers];
 }
 
 /**
@@ -68,7 +79,9 @@
  */
 - (void)loadSpecifiers {
     NSMutableArray* specifiers = [[NSMutableArray alloc] init];
+    if (!self.log) { _specifiers = specifiers; return; }
     NSString* displayName = [[self log] getDisplayName];
+    [self addAISpecifiers:specifiers];
 
     PSSpecifier* detailsSpecifier = [PSSpecifier groupSpecifierWithName:@"Details"];
     [detailsSpecifier setProperty:@"Tap on any cell to copy its contents." forKey:@"footerText"];
@@ -231,7 +244,7 @@
     [rawDataSpecifier setButtonAction:@selector(showRawData)];
     [specifiers addObject:rawDataSpecifier];
 
-    [self insertContiguousSpecifiers:specifiers atIndex:0];
+    _specifiers = specifiers;
 }
 
 /**
@@ -239,6 +252,76 @@
  *
  * @return Whether to reload the specifiers on resume.
  */
+- (NSString *)barkStatusLabel:(NSString *)status {
+    NSDictionary *labels = @{@"accepted": @"Bark API 已接受請求", @"failed": @"請求失敗", @"sending": @"傳送中", @"disabled": @"Bark 已關閉", @"missing_key": @"未設定 Bark key", @"blocked": @"App 已封鎖", @"not_attempted": @"未嘗試", @"deleted": @"通知已刪除"};
+    return status ? (labels[status] ?: @"尚未嘗試") : @"尚未嘗試";
+}
+
+- (void)addAISpecifiers:(NSMutableArray *)specifiers {
+    NSDictionary *info = self.log.aiInfo ?: @{};
+    NSMutableArray *lines = [NSMutableArray arrayWithObject:[VEAIPolicy summaryForInfo:info]];
+    if (info[@"skip_probability"]) [lines addObject:[NSString stringWithFormat:@"略過分數：%.3f", [info[@"skip_probability"] doubleValue]]];
+    if (info[@"provider"]) [lines addObject:[NSString stringWithFormat:@"%@ · %@", info[@"provider"], info[@"model"] ?: @""]];
+    if ([info[@"late"] boolValue]) [lines addObject:@"此判斷在轉發決定後收到。"];
+    [lines addObject:[VEAIPolicy actionLabel:info[@"action"]]];
+    [lines addObject:[self barkStatusLabel:info[@"bark_status"]]];
+    if (info[@"manual_bark_status"]) [lines addObject:[@"補發：" stringByAppendingString:[self barkStatusLabel:info[@"manual_bark_status"]]]];
+    if (self.log.correction) {
+        [lines addObject:[self.log.correction[@"should_forward"] boolValue] ? @"人工修正：應轉發" : @"人工修正：不應轉發"];
+        NSString *reason = self.log.correction[@"reason"];
+        if (reason.length) [lines addObject:[@"修正原因：" stringByAppendingString:reason]];
+    }
+    [lines addObject:@"修正只供之後的判斷參考，不會自動補發。模型分數不代表實際準確率。"];
+    PSSpecifier *group = [PSSpecifier groupSpecifierWithName:@"AI 判斷與人工修正"];
+    [group setProperty:[lines componentsJoinedByString:@"\n"] forKey:@"footerText"];
+    [specifiers addObject:group];
+    NSArray *titles = @[@"修正為：應轉發", @"修正為：不應轉發", @"撤銷修正", @"補發到 Bark"];
+    NSArray *selectors = @[@"correctToForward", @"correctToSkip", @"undoCorrection", @"resendToBark"];
+    for (NSUInteger i = 0; i < titles.count; i++) {
+        if (i == 2 && !self.log.correction) continue;
+        PSSpecifier *button = [PSSpecifier preferenceSpecifierNamed:titles[i] target:self set:nil get:nil detail:nil cell:PSButtonCell edit:nil];
+        [button setButtonAction:NSSelectorFromString(selectors[i])];
+        [button setProperty:@(self.log.recordID.length > 0) forKey:@"enabled"];
+        [specifiers addObject:button];
+    }
+}
+
+- (void)correctToForward { [self promptCorrection:YES]; }
+- (void)correctToSkip { [self promptCorrection:NO]; }
+- (void)promptCorrection:(BOOL)forward {
+    NSString *recordID = self.log.recordID;
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:forward ? @"應轉發" : @"不應轉發" message:@"可選填原因，供同一 App 的後續 AI 判斷參考。" preferredStyle:UIAlertControllerStyleAlert];
+    [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
+        field.placeholder = @"修正原因（可留空）";
+        field.text = self.log.correction[@"reason"];
+    }];
+    [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"儲存修正" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        BOOL saved = [[VEAIStore sharedStore] setCorrectionForRecordID:recordID shouldForward:@(forward) reason:alert.textFields.firstObject.text];
+        if (saved) [self reloadSpecifiers];
+        else [self showAIMessage:@"未能保存修正。通知可能已被刪除，或資料未能寫入。"];
+    }]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+- (void)undoCorrection {
+    BOOL saved = [[VEAIStore sharedStore] setCorrectionForRecordID:self.log.recordID shouldForward:nil reason:nil];
+    if (saved) [self reloadSpecifiers];
+    else [self showAIMessage:@"未能撤銷修正，請重新整理紀錄。"];
+}
+- (void)resendToBark {
+    [[VEAIManager sharedInstance] resendRecordID:self.log.recordID completion:^(NSString *status) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self reloadSpecifiers];
+            if (self.view.window) [self showAIMessage:[self barkStatusLabel:status]];
+        });
+    }];
+}
+- (void)showAIMessage:(NSString *)message {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"AI 通知紀錄" message:message preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
 - (BOOL)shouldReloadSpecifiersOnResume {
     return NO;
 }

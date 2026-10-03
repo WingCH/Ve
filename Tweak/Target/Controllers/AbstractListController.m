@@ -6,6 +6,7 @@
 //
 
 #import "AbstractListController.h"
+#import "../../../Preferences/NotificationKeys.h"
 
 @implementation AbstractListController
 - (void)viewDidLoad {
@@ -14,6 +15,12 @@
     NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
     [notificationCenter addObserver:self selector:@selector(applicationWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
     [notificationCenter addObserver:self selector:@selector(applicationDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
+    [notificationCenter addObserver:self selector:@selector(veLogsChanged:) name:kNotificationKeyLogsChanged object:nil];
+}
+
+- (void)dealloc { [[NSNotificationCenter defaultCenter] removeObserver:self]; }
+- (void)veLogsChanged:(NSNotification *)notification {
+    if (self.isViewLoaded && self.view.window) [self reloadSpecifiers];
 }
 
 - (void)viewWillAppear:(BOOL)animated {

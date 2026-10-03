@@ -7,6 +7,7 @@
 
 #import "LogManager.h"
 #import "Log.h"
+#import "VEAIStore.h"
 #import "../Utils/ImageUtil.h"
 #import "../Utils/JailbreakPath.h"
 #import "../Utils/NotificationIdentity.h"
@@ -54,8 +55,15 @@
 }
 
 - (BOOL)addLogForBulletin:(BBBulletin *)bulletin {
-    @synchronized (self) {
+    return [self addLogForBulletin:bulletin recordID:NULL];
+}
+
+- (BOOL)addLogForBulletin:(BBBulletin *)bulletin recordID:(NSString **)recordID {
+    if (recordID) *recordID = nil;
+    __block NSString *savedRecordID;
+    NSNumber *saved = [[VEAIStore sharedStore] performLocked:^id {
         NSMutableDictionary* json = [self getJson];
+        if (!json) return @NO;
         NSUInteger lastIdentifier = [self getLastIdentifierFromJson:json];
         NSMutableArray* logs = [self getLogsFromJson:json];
 
@@ -64,6 +72,7 @@
 
         NSMutableDictionary* logDict = [@{
             kLogKeyIdentifier: @(identifier),
+            kLogKeyRecordID: [NSUUID UUID].UUIDString,
             kLogKeyBundleIdentifier: [log bundleIdentifier],
             kLogKeyTitle: [log title],
             kLogKeyContent: [log content],
@@ -109,7 +118,7 @@
         // BBServer republishes retained notifications after a reboot or respring.
         // Let the caller suppress forwarding an unchanged, previously saved log.
         if ([self isNotificationAlreadyLogged:logDict inLogs:logs]) {
-            return NO;
+            return @NO;
         }
 
         [logs insertObject:logDict atIndex:0];
@@ -132,22 +141,26 @@
         json[kLogsKeyLogs] = logs;
         json[kLogsKeyLastIdentifier] = @(identifier);
 
-        [self setJsonFromDictionary:json];
+        BOOL written = [self setJsonFromDictionary:json];
+        if (written) savedRecordID = logDict[kLogKeyRecordID];
 
         // if ([self automaticallyDeleteLogs]) {
         //     [self removeOverdueLogsFromLogs:logs];
         // }
-        return YES;
-    }
+        return @(written);
+    }];
+    if (recordID) *recordID = savedRecordID;
+    if (saved.boolValue) [[VEAIStore sharedStore] postChange];
+    return saved.boolValue;
 }
 
 - (void)removeLog:(Log *)log {
+    [[VEAIStore sharedStore] performLocked:^id {
     NSMutableDictionary* json = [self getJson];
     NSMutableArray* logs = [self getLogsFromJson:json];
 
     for (NSDictionary* dictionary in logs) {
-        Log* _log = [Log logFromDictionary:dictionary];
-        if ([log identifier] == [_log identifier]) {
+        if (log.recordID.length && [log.recordID isEqual:dictionary[kLogKeyRecordID]]) {
             [logs removeObject:dictionary];
             break;
         }
@@ -156,15 +169,24 @@
     json[kLogsKeyLogs] = logs;
 
     [self setJsonFromDictionary:json];
+    return nil;
+    }];
+    [[VEAIStore sharedStore] postChange];
+}
+
+- (Log *)logForRecordID:(NSString *)recordID {
+    NSDictionary *dictionary = [[VEAIStore sharedStore] notificationForRecordID:recordID];
+    return dictionary ? [Log logFromDictionary:dictionary] : nil;
 }
 
 - (void)removeOverdueLogsFromLogs:(NSMutableArray *)logs {
+    [[VEAIStore sharedStore] performLocked:^id {
     NSMutableDictionary* json = [self getJson];
     NSDate* now = [NSDate date];
     NSDate* lastHouseholdDate = [DateUtil getDateFromString:[self getLastHousekeepingDateFromJson:json] withFormat:kLogInternalDateFormat];
 
     if ([DateUtil isDate:lastHouseholdDate inDate:now]) {
-        return;
+        return nil;
     }
     json[kLogsKeyLastHousekeepingDate] = [DateUtil getStringFromDate:now withFormat:kLogInternalDateFormat];
     [self setJsonFromDictionary:json];
@@ -174,6 +196,8 @@
             [self removeLog:log];
         }
     }
+    return nil;
+    }];
 }
 
 - (void)saveLocalAttachmentsForLog:(Log *)log fromBulletin:(BBBulletin *)bulletin {
@@ -292,12 +316,26 @@
  * @return The dictionary.
  */
 - (NSMutableDictionary *)getJson {
+    return [[VEAIStore sharedStore] performLocked:^id {
     [self ensureResourcesExist];
-
-    NSData* jsonData = [NSData dataWithContentsOfFile:[LogManager logsPath]];
-    NSMutableDictionary* json = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:nil];
-
+    NSMutableDictionary *json = [[VEAIStore sharedStore] readJSON:@"logs.json"];
+    if (!json) return nil;
+    BOOL migrated = NO;
+    for (NSMutableDictionary *log in json[kLogsKeyLogs]) {
+        if (![log[kLogKeyRecordID] length]) {
+            log[kLogKeyRecordID] = [NSUUID UUID].UUIDString;
+            migrated = YES;
+        }
+    }
+    if (migrated && ![self setJsonFromDictionary:json]) return nil;
+    NSDictionary *examples = [[VEAIStore sharedStore] readJSON:@"corrections.json"][@"examples"];
+    for (NSMutableDictionary *log in json[kLogsKeyLogs]) {
+        NSDictionary *correction = examples[log[kLogKeyRecordID]];
+        if (correction) log[kLogKeyCorrection] = correction;
+        else [log removeObjectForKey:kLogKeyCorrection];
+    }
     return json;
+    }];
 }
 
 /**
@@ -305,19 +343,17 @@
  *
  * @param dictionary The dictionary from which to save the contents from.
  */
-- (void)setJsonFromDictionary:(NSMutableDictionary *)dictionary {
-    NSData* jsonData = [NSJSONSerialization dataWithJSONObject:dictionary options:NSJSONWritingPrettyPrinted error:nil];
-    [jsonData writeToFile:[LogManager logsPath] atomically:YES];
+- (BOOL)setJsonFromDictionary:(NSMutableDictionary *)dictionary {
+    return [[VEAIStore sharedStore] writeJSON:dictionary name:@"logs.json"];
 }
 
 /**
  * Creates the json and path for the attachments.
  */
 - (void)removeAllLogs {
-    // Remove all log files
-    if ([_fileManager fileExistsAtPath:[LogManager logsPath]]) {
-        [_fileManager removeItemAtPath:[LogManager logsPath] error:nil];
-    }
+    [[VEAIStore sharedStore] performLocked:^id {
+    if (![self setJsonFromDictionary:[@{kLogsKeyLogs: @[], kLogsKeyLastIdentifier: @0} mutableCopy]]) return nil;
+    [[VEAIStore sharedStore] clearCorrections];
     
     // Remove all attachment directories
     if ([_fileManager fileExistsAtPath:[LogManager logsAttachmentPath]]) {
@@ -328,6 +364,9 @@
     [self ensureResourcesExist];
     
     NSLog(@"[Ve] All logs and attachments have been cleared");
+    return nil;
+    }];
+    [[VEAIStore sharedStore] postChange];
 }
 
 - (void)ensureResourcesExist {

@@ -6,6 +6,7 @@
 //
 
 #import "BarkManager.h"
+#import "../PrivateHeaders.h"
 #import "../Preferences/PreferenceKeys.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -42,12 +43,29 @@
                                level:(BarkNotificationLevel)level
                             threadID:(NSString *)threadID
                           bulletinID:(NSString *)bulletinID {
+    [self forwardNotificationWithTitle:title subtitle:subtitle body:body bundleIdentifier:bundleIdentifier
+        level:level threadID:threadID bulletinID:bulletinID completion:nil];
+}
+
+- (void)forwardNotificationWithTitle:(NSString *)title
+                            subtitle:(NSString *)subtitle
+                                body:(NSString *)body
+                    bundleIdentifier:(NSString *)bundleIdentifier
+                               level:(BarkNotificationLevel)level
+                            threadID:(NSString *)threadID
+                          bulletinID:(NSString *)bulletinID
+                          completion:(void (^)(NSString *))completion {
     NSUserDefaults* preferences = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
+    if ([[preferences arrayForKey:kPreferenceKeyBlockedSenders] containsObject:bundleIdentifier]) {
+        if (completion) completion(@"blocked");
+        return;
+    }
     
     // Check if Bark forwarding is enabled
     BOOL barkForwardingEnabled = [[preferences objectForKey:kPreferenceKeyBarkForwardingEnabled] boolValue];
     NSLog(@"[Ve] Bark forwarding enabled: %@", barkForwardingEnabled ? @"YES" : @"NO");
     if (!barkForwardingEnabled) {
+        if (completion) completion(@"disabled");
         return;
     }
     
@@ -55,6 +73,7 @@
     NSString* apiKey = [preferences objectForKey:kPreferenceKeyBarkAPIKey];
     NSLog(@"[Ve] Bark API key: %@", apiKey ? @"[SET]" : @"[NOT SET]");
     if (!apiKey || [apiKey length] == 0) {
+        if (completion) completion(@"missing_key");
         NSLog(@"[Ve] Bark API key is not set");
         return;
     }
@@ -82,7 +101,8 @@
                                         threadID:threadID
                                       bulletinID:bulletinID
                                          iconURL:iconURL
-                                   encryptionKey:encryptionKey];
+                                   encryptionKey:encryptionKey
+                                      completion:completion];
         });
     }];
 }
@@ -96,7 +116,8 @@
                               threadID:(NSString *)threadID
                             bulletinID:(NSString *)bulletinID
                                iconURL:(NSString *)iconURL
-                         encryptionKey:(NSString *)encryptionKey {
+                         encryptionKey:(NSString *)encryptionKey
+                            completion:(void (^)(NSString *))completion {
     NSUserDefaults* preferences = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
     NSString* baseURL = [preferences objectForKey:kPreferenceKeyBarkDomain];
     if (!baseURL || [baseURL length] == 0) {
@@ -105,6 +126,7 @@
     NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", baseURL, apiKey]];
     
     if (!url) {
+        if (completion) completion(@"failed");
         NSLog(@"[Ve] Invalid Bark URL with API key: %@", apiKey);
         return;
     }
@@ -138,6 +160,10 @@
         } else {
             NSString* jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
             NSString* encryptedMessage = [self encryptMessage:jsonString withKey:encryptionKey];
+            if (!encryptedMessage) {
+                if (completion) completion(@"failed");
+                return;
+            }
             
             [requestBody setObject:encryptedMessage forKey:@"ciphertext"];
             NSLog(@"[Ve] Sending AES-128-ECB encrypted Bark notification");
@@ -172,6 +198,7 @@
     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:requestBody options:0 error:&error];
     
     if (error) {
+        if (completion) completion(@"failed");
         NSLog(@"[Ve] Failed to serialize Bark request: %@", error.localizedDescription);
         return;
     }
@@ -183,6 +210,7 @@
     [request setTimeoutInterval:10.0];
     
     NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+        NSString *status = @"failed";
         if (error) {
             NSLog(@"[Ve] Bark forwarding failed: %@", error.localizedDescription);
         } else {
@@ -192,7 +220,9 @@
                 if (data) {
                     NSError* parseError;
                     NSDictionary* responseDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseError];
-                    if (!parseError && responseDict) {
+                    if (!parseError && [responseDict isKindOfClass:[NSDictionary class]]) {
+                        id code = responseDict[@"code"];
+                        if (([code isKindOfClass:[NSNumber class]] || [code isKindOfClass:[NSString class]]) && [code integerValue] == 200) status = @"accepted";
                         NSLog(@"[Ve] Bark response: %@", responseDict);
                     }
                 }
@@ -204,6 +234,7 @@
                 }
             }
         }
+        if (completion) completion(status);
     }];
     
     [task resume];
@@ -217,9 +248,8 @@
             return @"timeSensitive";
         case BarkNotificationLevelPassive:
             return @"passive";
-        default:
-            return @"active";
     }
+    return @"active";
 }
 
 - (NSString *)getAppDisplayNameForBundleIdentifier:(NSString *)bundleIdentifier {
