@@ -42,8 +42,10 @@ static void override_BBServer_publishBulletin_destinations(BBServer* self, SEL _
 	BOOL bulletinIDExists = [[LogManager sharedInstance] isBulletinIDAlreadyExists:bulletinID];
 	BarkNotificationLevel level = bulletinIDExists ? BarkNotificationLevelPassive : BarkNotificationLevelActive;
 	
-	// Always try to add log (may be filtered by isLogAlreadyLogged)
-	[[LogManager sharedInstance] addLogForBulletin:bulletin];
+	// Replayed notifications must not reach Bark, even at the passive level.
+	if (![[LogManager sharedInstance] addLogForBulletin:bulletin]) {
+		return;
+	}
 	
 	NSLog(@"[Ve] BulletinID: %@, Exists: %@, Level: %@", bulletinID ?: @"nil", bulletinIDExists ? @"YES" : @"NO", level == BarkNotificationLevelActive ? @"active" : @"passive");
 	

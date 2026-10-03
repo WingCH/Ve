@@ -47,6 +47,17 @@ RootHide build 需要 [roothide/theos](https://github.com/roothide/theos)，不�
 
 詳細技術依據、限制與真機 smoke-test 清單見 [Relaxin jailbreak 相容性研究](docs/relaxin-jailbreak-research.md)。
 
+## Regression Tests
+
+```sh
+bash tests/resolve-bootstrap-command-test.sh
+bash tests/install-to-device-test.sh
+bash tests/relaxin-support-contract-test.sh
+bash tests/notification-replay-test.sh
+```
+
+通知重播測試會先儲存通知，再由另一個 process 讀取，驗證重啟後的重播、通知更新及同一時間的不同通知。此測試需要 macOS Foundation，或 Linux 的 Clang、GNUstep Foundation 及 Objective-C development headers；非標準安裝可用 `GNUSTEP_PREFIX` 和 `OBJC_INCLUDE_DIR` 指定路徑。
+
 ## Credits
 - **Original Project**: [Ve by Alexandra Aurora Göttlicher, 74k1_](https://github.com/rrk567301/Ve)
 - **Enhanced by**: Wing CHAN

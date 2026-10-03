@@ -9,6 +9,7 @@
 #import "Log.h"
 #import "../Utils/ImageUtil.h"
 #import "../Utils/JailbreakPath.h"
+#import "../Utils/NotificationIdentity.h"
 #import "../Utils/StringUtil.h"
 #import "../Utils/DateUtil.h"
 #import "../Preferences/NotificationKeys.h"
@@ -52,89 +53,92 @@
     return [LogManager sharedInstance];
 }
 
-- (void)addLogForBulletin:(BBBulletin *)bulletin {
-    NSMutableDictionary* json = [self getJson];
-    NSUInteger lastIdentifier = [self getLastIdentifierFromJson:json];
-    NSMutableArray* logs = [self getLogsFromJson:json];
+- (BOOL)addLogForBulletin:(BBBulletin *)bulletin {
+    @synchronized (self) {
+        NSMutableDictionary* json = [self getJson];
+        NSUInteger lastIdentifier = [self getLastIdentifierFromJson:json];
+        NSMutableArray* logs = [self getLogsFromJson:json];
 
-    NSUInteger identifier = lastIdentifier + 1;
-    Log* log = [[Log alloc] initWithBulletin:bulletin identifier:identifier];
+        NSUInteger identifier = lastIdentifier + 1;
+        Log* log = [[Log alloc] initWithBulletin:bulletin identifier:identifier];
 
-    // Unseen notifications will be sent again after a respring.
-    // We check by date if the notification has been logged already.
-    if ([self isLogAlreadyLogged:log inLogs:logs]) {
-        return;
+        NSMutableDictionary* logDict = [@{
+            kLogKeyIdentifier: @(identifier),
+            kLogKeyBundleIdentifier: [log bundleIdentifier],
+            kLogKeyTitle: [log title],
+            kLogKeyContent: [log content],
+            kLogKeyDate: [DateUtil getStringFromDate:[log date] withFormat:kLogInternalDateFormat]
+        } mutableCopy];
+
+        // Add new properties if they exist
+        if ([log subtitle] && ![[log subtitle] isEqualToString:@""]) {
+            logDict[kLogKeySubtitle] = [log subtitle];
+        }
+
+        if ([log publicationDate]) {
+            logDict[kLogKeyPublicationDate] = [DateUtil getStringFromDate:[log publicationDate] withFormat:kLogInternalDateFormat];
+        }
+
+        if ([log expirationDate]) {
+            logDict[kLogKeyExpirationDate] = [DateUtil getStringFromDate:[log expirationDate] withFormat:kLogInternalDateFormat];
+        }
+
+        // Identifiers
+        if ([log bulletinID]) logDict[kLogKeyBulletinID] = [log bulletinID];
+        if ([log bulletinVersionID]) logDict[kLogKeyBulletinVersionID] = [log bulletinVersionID];
+        if ([log threadID]) logDict[kLogKeyThreadID] = [log threadID];
+        if ([log categoryID]) logDict[kLogKeyCategoryID] = [log categoryID];
+
+        // Behavior properties - always save these as they have default boolean values
+        logDict[kLogKeyClearable] = @([log clearable]);
+        logDict[kLogKeyIgnoresQuietMode] = @([log ignoresQuietMode]);
+        logDict[kLogKeyTurnsOnDisplay] = @([log turnsOnDisplay]);
+        logDict[kLogKeyPlaySound] = @([log playSound]);
+        logDict[kLogKeyHasPrivateContent] = @([log hasPrivateContent]);
+
+        // Summary and content
+        if ([log summaryArgument]) logDict[kLogKeySummaryArgument] = [log summaryArgument];
+        if ([log summaryArgumentCount] > 0) logDict[kLogKeySummaryArgumentCount] = @([log summaryArgumentCount]);
+
+        // Time zone
+        if ([log timeZone]) logDict[kLogKeyTimeZone] = [[log timeZone] name];
+
+        // Raw bulletin data for debugging
+        if ([log rawBulletinData]) logDict[kLogKeyRawBulletinData] = [log rawBulletinData];
+
+        // BBServer republishes retained notifications after a reboot or respring.
+        // Let the caller suppress forwarding an unchanged, previously saved log.
+        if ([self isNotificationAlreadyLogged:logDict inLogs:logs]) {
+            return NO;
+        }
+
+        [logs insertObject:logDict atIndex:0];
+
+        if ([self saveLocalAttachments]) {
+            [self saveLocalAttachmentsForLog:log fromBulletin:bulletin];
+        }
+
+        if ([self saveRemoteAttachments]) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [self saveRemoteAttachmentsForLog:log];
+            });
+        }
+
+        // Remove the oldest logs if the logs count exceeds the set limit.
+        while ([logs count] > [self logLimit]) {
+            [logs removeLastObject];
+        }
+
+        json[kLogsKeyLogs] = logs;
+        json[kLogsKeyLastIdentifier] = @(identifier);
+
+        [self setJsonFromDictionary:json];
+
+        // if ([self automaticallyDeleteLogs]) {
+        //     [self removeOverdueLogsFromLogs:logs];
+        // }
+        return YES;
     }
-
-    NSMutableDictionary* logDict = [@{
-        kLogKeyIdentifier: @(identifier),
-        kLogKeyBundleIdentifier: [log bundleIdentifier],
-        kLogKeyTitle: [log title],
-        kLogKeyContent: [log content],
-        kLogKeyDate: [DateUtil getStringFromDate:[log date] withFormat:kLogInternalDateFormat]
-    } mutableCopy];
-    
-    // Add new properties if they exist
-    if ([log subtitle] && ![[log subtitle] isEqualToString:@""]) {
-        logDict[kLogKeySubtitle] = [log subtitle];
-    }
-    
-    if ([log publicationDate]) {
-        logDict[kLogKeyPublicationDate] = [DateUtil getStringFromDate:[log publicationDate] withFormat:kLogInternalDateFormat];
-    }
-    
-    if ([log expirationDate]) {
-        logDict[kLogKeyExpirationDate] = [DateUtil getStringFromDate:[log expirationDate] withFormat:kLogInternalDateFormat];
-    }
-    
-    // Identifiers
-    if ([log bulletinID]) logDict[kLogKeyBulletinID] = [log bulletinID];
-    if ([log bulletinVersionID]) logDict[kLogKeyBulletinVersionID] = [log bulletinVersionID];
-    if ([log threadID]) logDict[kLogKeyThreadID] = [log threadID];
-    if ([log categoryID]) logDict[kLogKeyCategoryID] = [log categoryID];
-    
-    // Behavior properties - always save these as they have default boolean values
-    logDict[kLogKeyClearable] = @([log clearable]);
-    logDict[kLogKeyIgnoresQuietMode] = @([log ignoresQuietMode]);
-    logDict[kLogKeyTurnsOnDisplay] = @([log turnsOnDisplay]);
-    logDict[kLogKeyPlaySound] = @([log playSound]);
-    logDict[kLogKeyHasPrivateContent] = @([log hasPrivateContent]);
-    
-    // Summary and content
-    if ([log summaryArgument]) logDict[kLogKeySummaryArgument] = [log summaryArgument];
-    if ([log summaryArgumentCount] > 0) logDict[kLogKeySummaryArgumentCount] = @([log summaryArgumentCount]);
-    
-    // Time zone
-    if ([log timeZone]) logDict[kLogKeyTimeZone] = [[log timeZone] name];
-    
-    // Raw bulletin data for debugging
-    if ([log rawBulletinData]) logDict[kLogKeyRawBulletinData] = [log rawBulletinData];
-    
-    [logs insertObject:logDict atIndex:0];
-
-    if ([self saveLocalAttachments]) {
-        [self saveLocalAttachmentsForLog:log fromBulletin:bulletin];
-    }
-
-    if ([self saveRemoteAttachments]) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [self saveRemoteAttachmentsForLog:log];
-        });
-    }
-
-    // Remove the oldest logs if the logs count exceeds the set limit.
-    while ([logs count] > [self logLimit]) {
-        [logs removeLastObject];
-    }
-
-    json[kLogsKeyLogs] = logs;
-    json[kLogsKeyLastIdentifier] = @(identifier);
-
-    [self setJsonFromDictionary:json];
-
-    // if ([self automaticallyDeleteLogs]) {
-    //     [self removeOverdueLogsFromLogs:logs];
-    // }
 }
 
 - (void)removeLog:(Log *)log {
@@ -234,13 +238,9 @@
     return attachments;
 }
 
-- (BOOL)isLogAlreadyLogged:(Log *)log inLogs:(NSMutableArray *)logs {
-    NSString* logDateString = [DateUtil getStringFromDate:[log date] withFormat:kLogInternalDateFormat];
-
+- (BOOL)isNotificationAlreadyLogged:(NSDictionary *)notification inLogs:(NSArray *)logs {
     for (NSDictionary* existingLogDictionary in logs) {
-        Log* existingLog = [Log logFromDictionary:existingLogDictionary];
-        NSString* existingLogDateString = [DateUtil getStringFromDate:[existingLog date] withFormat:kLogInternalDateFormat];
-        if ([existingLogDateString isEqualToString:logDateString]) {
+        if (VEIsSameLoggedNotification(notification, existingLogDictionary)) {
             return YES;
         }
     }

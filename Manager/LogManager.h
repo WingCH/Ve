@@ -20,7 +20,8 @@
 + (NSString *)logsPath;
 + (NSString *)logsAttachmentPath;
 + (instancetype)sharedInstance;
-- (void)addLogForBulletin:(BBBulletin *)bulletin;
+// Returns NO for an unchanged notification already present in the saved logs.
+- (BOOL)addLogForBulletin:(BBBulletin *)bulletin;
 - (void)removeLog:(Log *)log;
 - (void)removeAllLogs;
 - (NSArray *)getAttachmentsForLog:(Log *)log;
