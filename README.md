@@ -31,4 +31,4 @@ Source commit: [4b1a6be8872f18375d149c7c203caba099931329](https://github.com/Win
 - `FINALPACKAGE=1`; independent `rootless` and `roothide` package schemes; generated staging permissions normalized before packaging.
 - License: GPL-3.0; see [COPYING](COPYING) and the source tag above.
 
-此分支保存下載套件。雲端環境目前限制 `api.github.com`／`uploads.github.com`，所以尚未建立 GitHub Release 頁面；可直接使用上述下載連結。
+此分支保存下載套件。[GitHub Release 2.2.1](https://github.com/WingCH/Ve/releases/tag/2.2.1) 已發佈。此雲端環境的 GitHub Release 資產上載介面回報 HTTP 400 `Bad Content-Length`，所以 Release 頁面提供此分支的套件下載連結。
