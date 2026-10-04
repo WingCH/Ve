@@ -477,7 +477,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Observe mode forwards all notifications. AI timeouts and failures also forward. Timeout must be above 0 and at most 120 seconds. The skip threshold does not measure accuracy. Corrections affect future decisions only.</string>
+			<string>Observe mode forwards all notifications. AI timeouts and failures also forward. Timeout must be above 0 and at most 120 seconds. In Filter mode, skip when the AI skip score meets or exceeds this threshold (0.9 means a score of 90%). Otherwise, forward. Scores do not measure accuracy. Corrections affect future decisions only.</string>
 		</dict>
 		<dict>
 			<key>cell</key>

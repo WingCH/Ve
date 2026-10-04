@@ -40,6 +40,12 @@ AI 是可選功能。未設定 token 或關閉 AI 時，直接沿用 Bark。啟�
 
 新增設定及編輯頁統一使用英文。模型、token 及連線欄位按 provider 顯示；Jev 不顯示 Cloudflare 模型或 Account ID。Cloudflare 標準 endpoint 保留所需 Account ID，完整自訂 URL 不使用 `{account_id}` 時隱藏該欄位。原有 token、模型、URL 與自訂 prompt 保留。
 
+### Notification Logs 英文介面（2.3.2）
+
+通知列表、AI 狀態、詳細頁、修正及補發介面統一使用英文。通知內容及使用者填寫的修正原因保留原文。詳細頁顯示當次的 Skip score 與 Skip threshold。
+
+Skip threshold 是略過通知的分數門檻。Filter 模式在分數大於或等於門檻時略過轉發，其他分數照常轉發。預設 0.9 表示略過分數至少 0.9 才攔截，並不代表實際準確率達 90%。Observe 模式仍照常轉發。
+
 ## Compatibility
 
 - 標準 rootless：支援 iOS/iPadOS 14 或以上，package architecture 為 `iphoneos-arm64`。

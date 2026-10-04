@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the Preferences schema needed by the optional AI controls."""
+"""Check the optional AI Preferences schema and English UI strings."""
 from pathlib import Path
 import plistlib
 import re
@@ -31,7 +31,9 @@ for item in items:
         if isinstance(values, str):
             values = [values]
         assert all(not re.search(r"[\u3400-\u9fff]", value) for value in values), (key, values)
-for path in ("Preferences/Controllers/VeRootListController.m", "Preferences/Controllers/VePromptEditorController.m"):
+ui_paths = ["Preferences/Controllers/VeRootListController.m", "Preferences/Controllers/VePromptEditorController.m", "Manager/VEAIPolicy.m"]
+ui_paths += [str(path.relative_to(root)) for path in (root / "Tweak/Target").rglob("*.m")]
+for path in ui_paths:
     for literal in re.findall(r'@"([^"\n]*)"', (root / path).read_text()):
         assert not re.search(r"[\u3400-\u9fff]", literal), (path, literal)
 assert not any(item.get("key") == "AIToken" and item["cell"] == "PSEditTextCell" for item in items)

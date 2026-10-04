@@ -108,3 +108,9 @@ Cloudflare Account ID 僅在選取 Cloudflare 且 endpoint 包含 `{account_id}`
 2.3.1 來源 commit：`f15c6353e6f90ed6146808845c0a727184432f69`。兩款 package 都由此 commit 的乾淨 tracked source 原生建置。Rootless SHA-256：`08d0f3aae6d787b06c7cf77a9bd0a72c5c02869a1a68281dc627cbe824bfb1c6`；RootHide SHA-256：`b8d50399eaaaaad05a3a3561bd908c595aa5837e0b85d58568598d55342fa904`。
 
 正式 RootHide package 已安裝，`dpkg-query` 讀回 2.3.1，三個 installed binary SHA-256 與正式 artifact 相符。Respring 後設定介面、provider 欄位、自訂 URL 儲存、Restore Default、英文編輯頁及清除修正對話框均通過。原文：「"passed": true」及「"matches_prior": true」— [2.3.1 runtime 驗證](/Users/wingchan/Project/Ve/packages/native-release-2.3.1/RUNTIME-VERIFICATION-2.3.1.json)。依據關係：此檔記錄指定 guest 的 UI／設定及 installed identity；本次沒有重跑通知／HTTP 矩陣，也沒有呼叫真實模型或測試 rootless 實機。
+
+## 2.3.2 Notification Logs 英文介面
+
+狀態：已實作，待正式 build 及 vphone 驗證。使用者要求 Notification Logs 也改用英文，並詢問 0.9 Skip threshold 的意思。列表 AI 狀態、詳細頁、Bark 狀態、修正／補發及錯誤訊息改用英文，通知內容與修正原因保留原文。詳細頁增加當次儲存的 Skip threshold，與 Skip score 一起顯示。
+
+0.9 是略過通知的操作門檻，並不表示實際準確率。原文：「if (probability.doubleValue >= threshold) return @"skip";」— [VEAIPolicy.m:108](/Users/wingchan/Project/Ve/Manager/VEAIPolicy.m:108)，2.3.2 修改時核對。依據關係：程式直接以大於或等於門檻分類為 skip；只有 Filter 模式按分類攔截，Observe 仍照常轉發。本次沒有改動判斷或轉發規則。

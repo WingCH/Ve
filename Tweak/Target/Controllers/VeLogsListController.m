@@ -27,6 +27,8 @@
 
     [self setSearchController:[[UISearchController alloc] init]];
     [[[self searchController] searchBar] setDelegate:self];
+    self.searchController.searchBar.placeholder = @"Search";
+    self.searchController.searchBar.accessibilityLabel = @"Search";
     [[self searchController] setObscuresBackgroundDuringPresentation:NO];
     [[self navigationItem] setSearchController:[self searchController]];
 
@@ -89,6 +91,7 @@
 
     [[self filterButton] setMenu:menu];
     [[self filterButton] setShowsMenuAsPrimaryAction:YES];
+    self.filterButton.accessibilityLabel = @"Filter";
 }
 
 /**

@@ -112,28 +112,28 @@
 
 + (NSString *)summaryForInfo:(NSDictionary *)info {
     NSString *state = info[@"state"];
-    if ([state isEqual:@"pending"]) return @"AI：判斷中";
-    if ([state isEqual:@"timeout"]) return @"AI：逾時，照常轉發";
-    if ([state isEqual:@"failed"]) return @"AI：無法判斷，照常轉發";
-    if ([state isEqual:@"disabled"]) return @"AI：已關閉";
-    if ([state isEqual:@"not_configured"]) return @"AI：未設定，已略過";
-    if ([state isEqual:@"blocked"]) return @"AI：App 已封鎖";
+    if ([state isEqual:@"pending"]) return @"AI: Evaluating";
+    if ([state isEqual:@"timeout"]) return @"AI: Timed out, forward";
+    if ([state isEqual:@"failed"]) return @"AI: Evaluation failed, forward";
+    if ([state isEqual:@"disabled"]) return @"AI: Disabled";
+    if ([state isEqual:@"not_configured"]) return @"AI: Not configured, skipped";
+    if ([state isEqual:@"blocked"]) return @"AI: App blocked";
     if ([state isEqual:@"classified"]) {
         NSString *decision = info[@"decision"];
-        if ([decision isEqual:@"skip"]) return @"AI：建議略過";
-        if ([decision isEqual:@"forward"]) return @"AI：建議轉發";
-        return @"AI：不確定，照常轉發";
+        if ([decision isEqual:@"skip"]) return @"AI: Skip recommended";
+        if ([decision isEqual:@"forward"]) return @"AI: Forward recommended";
+        return @"AI: Uncertain, forward";
     }
-    return @"AI：未判斷";
+    return @"AI: Not evaluated";
 }
 
 + (NSString *)actionLabel:(NSString *)action {
     NSDictionary *labels = @{
-        @"observe": @"觀察模式：照常轉發", @"skip": @"攔截模式：略過轉發",
-        @"forward": @"依判斷轉發", @"uncertain": @"判斷不確定：照常轉發",
-        @"timeout": @"AI 逾時：照常轉發", @"failed": @"AI 失敗：照常轉發",
-        @"ai_skipped": @"略過 AI：沿用原有轉發", @"blocked": @"App 已封鎖"
+        @"observe": @"Observe mode: Forward as before", @"skip": @"Filter mode: Skip forwarding",
+        @"forward": @"Forward based on AI decision", @"uncertain": @"Uncertain: Forward as before",
+        @"timeout": @"AI timed out: Forward as before", @"failed": @"AI failed: Forward as before",
+        @"ai_skipped": @"AI skipped: Forward as before", @"blocked": @"App blocked"
     };
-    return action ? (labels[action] ?: @"尚未決定") : @"尚未決定";
+    return action ? (labels[action] ?: @"Not decided") : @"Not decided";
 }
 @end

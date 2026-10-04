@@ -72,7 +72,7 @@
 		]];
         self.aiStatusLabel = [UILabel new];
         NSString *summary = [VEAIPolicy summaryForInfo:self.log.aiInfo];
-        if (self.log.correction) summary = [summary stringByAppendingString:[self.log.correction[@"should_forward"] boolValue] ? @" · 修正：應轉發" : @" · 修正：不應轉發"];
+        if (self.log.correction) summary = [summary stringByAppendingString:[self.log.correction[@"should_forward"] boolValue] ? @" · Correction: Forward" : @" · Correction: Skip"];
         self.aiStatusLabel.text = summary;
         self.aiStatusLabel.textColor = [UIColor secondaryLabelColor];
         self.aiStatusLabel.font = [UIFont systemFontOfSize:11];

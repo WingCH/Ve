@@ -253,29 +253,30 @@
  * @return Whether to reload the specifiers on resume.
  */
 - (NSString *)barkStatusLabel:(NSString *)status {
-    NSDictionary *labels = @{@"accepted": @"Bark API 已接受請求", @"failed": @"請求失敗", @"sending": @"傳送中", @"disabled": @"Bark 已關閉", @"missing_key": @"未設定 Bark key", @"blocked": @"App 已封鎖", @"not_attempted": @"未嘗試", @"deleted": @"通知已刪除"};
-    return status ? (labels[status] ?: @"尚未嘗試") : @"尚未嘗試";
+    NSDictionary *labels = @{@"accepted": @"Request accepted by Bark API", @"failed": @"Request failed", @"sending": @"Sending", @"disabled": @"Bark disabled", @"missing_key": @"Bark key missing", @"blocked": @"App blocked", @"not_attempted": @"Not attempted", @"deleted": @"Notification deleted"};
+    return status ? (labels[status] ?: @"Not attempted") : @"Not attempted";
 }
 
 - (void)addAISpecifiers:(NSMutableArray *)specifiers {
     NSDictionary *info = self.log.aiInfo ?: @{};
     NSMutableArray *lines = [NSMutableArray arrayWithObject:[VEAIPolicy summaryForInfo:info]];
-    if (info[@"skip_probability"]) [lines addObject:[NSString stringWithFormat:@"略過分數：%.3f", [info[@"skip_probability"] doubleValue]]];
+    if (info[@"skip_probability"]) [lines addObject:[NSString stringWithFormat:@"Skip score: %.3f", [info[@"skip_probability"] doubleValue]]];
+    if (info[@"threshold"]) [lines addObject:[NSString stringWithFormat:@"Skip threshold: %.3f", [info[@"threshold"] doubleValue]]];
     if (info[@"provider"]) [lines addObject:[NSString stringWithFormat:@"%@ · %@", info[@"provider"], info[@"model"] ?: @""]];
-    if ([info[@"late"] boolValue]) [lines addObject:@"此判斷在轉發決定後收到。"];
+    if ([info[@"late"] boolValue]) [lines addObject:@"This AI result arrived after the forwarding decision."];
     [lines addObject:[VEAIPolicy actionLabel:info[@"action"]]];
     [lines addObject:[self barkStatusLabel:info[@"bark_status"]]];
-    if (info[@"manual_bark_status"]) [lines addObject:[@"補發：" stringByAppendingString:[self barkStatusLabel:info[@"manual_bark_status"]]]];
+    if (info[@"manual_bark_status"]) [lines addObject:[@"Manual resend: " stringByAppendingString:[self barkStatusLabel:info[@"manual_bark_status"]]]];
     if (self.log.correction) {
-        [lines addObject:[self.log.correction[@"should_forward"] boolValue] ? @"人工修正：應轉發" : @"人工修正：不應轉發"];
+        [lines addObject:[self.log.correction[@"should_forward"] boolValue] ? @"Correction: Should forward" : @"Correction: Should skip"];
         NSString *reason = self.log.correction[@"reason"];
-        if (reason.length) [lines addObject:[@"修正原因：" stringByAppendingString:reason]];
+        if (reason.length) [lines addObject:[@"Correction reason: " stringByAppendingString:reason]];
     }
-    [lines addObject:@"修正只供之後的判斷參考，不會自動補發。模型分數不代表實際準確率。"];
-    PSSpecifier *group = [PSSpecifier groupSpecifierWithName:@"AI 判斷與人工修正"];
+    [lines addObject:@"In Filter mode, a skip score at or above the threshold skips forwarding. Observe mode forwards as before. Corrections guide future decisions and do not resend this notification. Scores do not measure accuracy."];
+    PSSpecifier *group = [PSSpecifier groupSpecifierWithName:@"AI Decision and Corrections"];
     [group setProperty:[lines componentsJoinedByString:@"\n"] forKey:@"footerText"];
     [specifiers addObject:group];
-    NSArray *titles = @[@"修正為：應轉發", @"修正為：不應轉發", @"撤銷修正", @"補發到 Bark"];
+    NSArray *titles = @[@"Mark as Should Forward", @"Mark as Should Skip", @"Undo Correction", @"Resend to Bark"];
     NSArray *selectors = @[@"correctToForward", @"correctToSkip", @"undoCorrection", @"resendToBark"];
     for (NSUInteger i = 0; i < titles.count; i++) {
         if (i == 2 && !self.log.correction) continue;
@@ -290,23 +291,23 @@
 - (void)correctToSkip { [self promptCorrection:NO]; }
 - (void)promptCorrection:(BOOL)forward {
     NSString *recordID = self.log.recordID;
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:forward ? @"應轉發" : @"不應轉發" message:@"可選填原因，供同一 App 的後續 AI 判斷參考。" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:forward ? @"Should Forward" : @"Should Skip" message:@"Add an optional reason to guide future AI decisions for this app." preferredStyle:UIAlertControllerStyleAlert];
     [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
-        field.placeholder = @"修正原因（可留空）";
+        field.placeholder = @"Correction reason (optional)";
         field.text = self.log.correction[@"reason"];
     }];
-    [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"儲存修正" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Save Correction" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         BOOL saved = [[VEAIStore sharedStore] setCorrectionForRecordID:recordID shouldForward:@(forward) reason:alert.textFields.firstObject.text];
         if (saved) [self reloadSpecifiers];
-        else [self showAIMessage:@"未能保存修正。通知可能已被刪除，或資料未能寫入。"];
+        else [self showAIMessage:@"Could not save the correction. The notification may have been deleted, or the data could not be written."];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
 }
 - (void)undoCorrection {
     BOOL saved = [[VEAIStore sharedStore] setCorrectionForRecordID:self.log.recordID shouldForward:nil reason:nil];
     if (saved) [self reloadSpecifiers];
-    else [self showAIMessage:@"未能撤銷修正，請重新整理紀錄。"];
+    else [self showAIMessage:@"Could not undo the correction. Refresh the logs."];
 }
 - (void)resendToBark {
     [[VEAIManager sharedInstance] resendRecordID:self.log.recordID completion:^(NSString *status) {
@@ -317,7 +318,7 @@
     }];
 }
 - (void)showAIMessage:(NSString *)message {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"AI 通知紀錄" message:message preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"AI Notification Log" message:message preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
     [self presentViewController:alert animated:YES completion:nil];
 }
@@ -363,6 +364,7 @@
 
     [[self removeButton] setMenu:menu];
     [[self removeButton] setShowsMenuAsPrimaryAction:YES];
+    self.removeButton.accessibilityLabel = @"Remove";
 }
 
 /**
