@@ -1,6 +1,6 @@
 # Clef 通知篩選設計
 
-設計日期：2026-10-03。實作更新：2026-10-04。狀態：**已實作，雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查，指定 vphone 的正式 artifact HTTP／UI 回歸已通過。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
+設計日期：2026-10-03。實作更新：2026-10-04。狀態：**2.3.1 雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查，指定 vphone 的 2.3.1 設定介面及安裝 identity 驗證通過。2.3.0 的通知／HTTP 回歸另保留既有證據。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
 
 ## 已確認的需求
 
@@ -103,4 +103,8 @@ Cloudflare Account ID 僅在選取 Cloudflare 且 endpoint 包含 `{account_id}`
 
 ## 2.3.1 build
 
-狀態：已實作，待正式 build 驗證。使用者要求將上述設定介面修正產生新 build，版本同步為 2.3.1。沿用兩個獨立 package scheme、來源 commit、ABI／簽署／dSYM UUID 驗證、指定 vphone 安裝讀回及 GitHub prerelease 流程。原有 2.3.0 assets 保留。
+狀態：已處理，正式 build 與指定 vphone 設定介面驗證通過。使用者要求將上述設定介面修正產生新 build，版本同步為 2.3.1。沿用兩個獨立 package scheme、來源 commit、ABI／簽署／dSYM UUID 驗證、指定 vphone 安裝讀回及 GitHub prerelease 流程。原有 2.3.0 assets 保留。
+
+2.3.1 來源 commit：`f15c6353e6f90ed6146808845c0a727184432f69`。兩款 package 都由此 commit 的乾淨 tracked source 原生建置。Rootless SHA-256：`08d0f3aae6d787b06c7cf77a9bd0a72c5c02869a1a68281dc627cbe824bfb1c6`；RootHide SHA-256：`b8d50399eaaaaad05a3a3561bd908c595aa5837e0b85d58568598d55342fa904`。
+
+正式 RootHide package 已安裝，`dpkg-query` 讀回 2.3.1，三個 installed binary SHA-256 與正式 artifact 相符。Respring 後設定介面、provider 欄位、自訂 URL 儲存、Restore Default、英文編輯頁及清除修正對話框均通過。原文：「"passed": true」及「"matches_prior": true」— [2.3.1 runtime 驗證](/Users/wingchan/Project/Ve/packages/native-release-2.3.1/RUNTIME-VERIFICATION-2.3.1.json)。依據關係：此檔記錄指定 guest 的 UI／設定及 installed identity；本次沒有重跑通知／HTTP 矩陣，也沒有呼叫真實模型或測試 rootless 實機。
