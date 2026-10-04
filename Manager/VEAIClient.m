@@ -48,8 +48,7 @@
     [request setValue:[@"Bearer " stringByAppendingString:token] forHTTPHeaderField:@"Authorization"];
     // The forwarding gate has a separate deadline. A bounded late response can still be recorded.
     request.timeoutInterval = MAX(10.0, [settings[@"timeout"] doubleValue] + 5.0);
-    NSArray *secrets = token.length ? @[token] : @[];
-    NSDictionary *requestLog = [VEAPILog request:request secrets:secrets];
+    NSDictionary *requestLog = [VEAPILog request:request];
     NSTimeInterval started = [NSDate date].timeIntervalSince1970;
     if (trace) trace(@{@"state": @"pending", @"started_at": @(started), @"request": requestLog});
     [[self.session dataTaskWithRequest:request completionHandler:^(NSData *responseData, NSURLResponse *response, NSError *error) {
@@ -60,7 +59,7 @@
         else if (!probability) code = status >= 200 && status < 300 ? @"invalid_response" : [NSString stringWithFormat:@"http_%ld", (long)status];
         completion(probability, code);
         if (trace) trace(@{@"state": @"completed", @"started_at": @(started), @"duration_ms": @(([NSDate date].timeIntervalSince1970 - started) * 1000), @"request": requestLog,
-            @"response": [VEAPILog response:response data:responseData error:error secrets:secrets]});
+            @"response": [VEAPILog response:response data:responseData error:error]});
     }] resume];
 }
 @end

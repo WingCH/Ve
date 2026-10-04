@@ -42,13 +42,21 @@ AI 是可選功能。未設定 token 或關閉 AI 時，直接沿用 Bark。啟�
 
 ### Notification Logs 英文介面（2.3.2）
 
-通知列表、AI 狀態、詳細頁、修正及補發介面統一使用英文。通知內容及使用者填寫的修正原因保留原文。詳細頁顯示當次的 Skip score 與 Skip threshold。 新 AI 和 Bark 請求另提供 AI API Raw Data 與 Bark API Raw Data 兩個入口，可查看及複製 request、response、HTTP status 與 transport error。AI 頁只顯示 AI 呼叫；Bark 頁合併自動轉發及手動補發。憑證遮蔽，body 最多 16 KiB，超出時標示 truncated；舊紀錄未保存的 raw data 不會補造。
+通知列表、AI 狀態、詳細頁、修正及補發介面統一使用英文。通知內容及使用者填寫的修正原因保留原文。詳細頁顯示當次的 Skip score 與 Skip threshold。新 AI 和 Bark 請求另提供 AI API Raw Data 與 Bark API Raw Data 兩個入口，可查看及複製 request、response、HTTP status 與 transport error。AI 頁只顯示 AI 呼叫；Bark 頁合併自動轉發及手動補發。2.3.2 原有 capture 會遮蔽憑證並限制 body 為 16 KiB；2.3.4 改為下述完整 capture，舊紀錄不會補造。
 
 Skip threshold 是略過通知的分數門檻。Filter 模式在分數大於或等於門檻時略過轉發，其他分數照常轉發。預設 0.9 表示略過分數至少 0.9 才攔截，並不代表實際準確率達 90%。Observe 模式仍照常轉發。
 
 ### Notification Logs 開頁載入（2.3.3）
 
 先完成列表轉場，再在背景讀取及排序紀錄。主線程使用已準備的列表快照，刷新期間保留目前內容；搜尋／排序改變時，舊結果不會覆寫新選擇。API raw data 分為 AI、Bark 兩頁，Bark 的自動轉發及補發放在同一頁。
+
+### 完整追溯及修正 context（2.3.4）
+
+新紀錄保存 App 交給 NSURLSession 的 request body，以及 completion 收到的 response body。完整 bytes 以 Base64 保存，UTF-8 body 同時保留原文；不解析再重建 JSON、不遮蔽 token／URL／headers、不截斷 body。Raw Data 頁直接顯示原文，Copy 可選完整 trace、JSON archive 或各次 request／response body。JSON archive 只是可還原 bytes 的外層容器。原有 Bark 加密仍執行，capture 保存的是實際送出的 ciphertext。headers 是 NSURLSession 可取得的欄位，capture 範圍為 App 的 API 資料。舊版已截斷或遮蔽的內容無法還原，介面會標示 legacy capture。
+
+政策與修正例子保留在 state。官方原文：「examples」— [TypeSafe State](https://docs.typesafe.ai/concepts/state#state-can-be-a-simple-string-or-a-structured-json-value)，來源直接列明 state 可包含例子。instructions 改為明確引用 `notification`、`current_policy.rules`、`corrected_examples`，並完整說明 `should_forward` 與 skip 答案的相反方向。每次仍選同 App 最新 10 條修正，最新規則優先。這是 inference context，沒有訓練模型權重；詳見[官方及 SDK 交叉核對](docs/jev-instructions-and-raw-trace-review.md)。
+
+預設規則及判斷問題加入明確詐騙、欺詐、釣魚企圖。真正的交易、驗證碼、防詐騙警報及只是討論詐騙的訊息仍應保留。既有舊預設規則會採用更新版本，自訂 prompt 保留且可明確指定例外。Filter 模式仍按分數門檻攔截；Observe 模式、資料不足、失敗及逾時仍轉發。
 
 ## Compatibility
 

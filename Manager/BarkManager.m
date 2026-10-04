@@ -225,9 +225,7 @@
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     [request setHTTPBody:jsonData];
     [request setTimeoutInterval:10.0];
-    NSMutableArray *secrets = [NSMutableArray arrayWithObject:apiKey];
-    if (encryptionKey.length) [secrets addObject:encryptionKey];
-    NSDictionary *requestLog = [VEAPILog request:request secrets:secrets];
+    NSDictionary *requestLog = [VEAPILog request:request];
     NSTimeInterval started = [NSDate date].timeIntervalSince1970;
     if (trace) trace(@{@"state": @"pending", @"started_at": @(started), @"request": requestLog});
     
@@ -258,7 +256,7 @@
         }
         if (completion) completion(status);
         if (trace) trace(@{@"state": @"completed", @"started_at": @(started), @"duration_ms": @(([NSDate date].timeIntervalSince1970 - started) * 1000),
-            @"request": requestLog, @"response": [VEAPILog response:response data:data error:error secrets:secrets]});
+            @"request": requestLog, @"response": [VEAPILog response:response data:data error:error]});
     }];
     
     [task resume];

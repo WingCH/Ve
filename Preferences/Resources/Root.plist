@@ -477,7 +477,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Observe mode forwards all notifications. AI timeouts and failures also forward. Timeout must be above 0 and at most 120 seconds. In Filter mode, skip when the AI skip score meets or exceeds this threshold (0.9 means a score of 90%). Otherwise, forward. Scores do not measure accuracy. Corrections affect future decisions only.</string>
+			<string>Observe mode forwards all notifications. AI timeouts and failures also forward. Timeout must be above 0 and at most 120 seconds. In Filter mode, skip when the AI skip score meets or exceeds this threshold (0.9 means a score of 90%). Otherwise, forward. Scores do not measure accuracy. Corrections are context for future decisions; they do not train the model. Clear scams and phishing attempts are skip candidates. Genuine fraud warnings remain forward candidates.</string>
 		</dict>
 		<dict>
 			<key>cell</key>

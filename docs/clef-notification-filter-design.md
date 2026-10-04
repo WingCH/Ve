@@ -4,6 +4,8 @@
 
 最新版本：2.3.3 雙 scheme 正式產物已通過 ABI／簽署／dSYM 檢查。正式 RootHide 包已安裝到指定 vphone，binary identity 及介面 smoke 通過；實機卡頓覆核待完成。
 
+最新候選：2.3.4 已完成完整 raw capture、修正 context 引用及詐騙判斷規則。雙 scheme 建置與指定 vphone 的合成 HTTP／原文複製驗證通過；尚未發布，真實模型準確率待驗證。
+
 ## 已確認的需求
 
 通知處理範圍與 AI 失敗時的轉發行為見 [ADR 0001](adr/0001-ai-forwarding-boundary.md)。人工修正的保留、同 App 最近 10 條例子及獨立補發行為見 [ADR 0002](adr/0002-correction-examples-lifecycle.md)。領域用語見 [CONTEXT.md](../CONTEXT.md)。
@@ -148,3 +150,15 @@ Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆�
 使用者要求建置並發布至 GitHub，以及 commit／push 至 main。main 可 fast-forward，保留既有功能分支提交。正式建置來源：`05d498e423f7f2077e11e0970bab80774d2cfac9`，tracked source 在兩次建置時均乾淨。原文：「"source_clean_for_build": true」— [2.3.3 建置紀錄](/Users/wingchan/Project/Ve/packages/native-release-2.3.3/BUILD-INFO-2.3.3.json)。Rootless SHA-256：`4f0bdd9a9b6f79b6e2eb79ade810ee0afdbf7b54a8f309c50d63733d16d31b7f`；RootHide SHA-256：`08ac0a33f07aa1acf3362c1ad47fa7e2fb4923900e84a173a2c1fc533864a495`。兩個 scheme 均通過 ABI、簽署及保存 dSYM UUID 核對。
 
 316 項 AI assertions、20 項跨 process 重播 assertions、5 項通知授權測試，以及 settings／bootstrap／installer／Relaxin contracts 通過。指定 `iOS-26.6.2` 已安裝正式 RootHide 包，三個 installed binary hash 相符。原文：「"package_version_verified": true」及「"passed": true」— [2.3.3 runtime 驗證](/Users/wingchan/Project/Ve/packages/native-release-2.3.3/RUNTIME-VERIFICATION-2.3.3.json)。依據關係：正式包的版本、binary identity、列表進入／再次進入及 AI／Bark reader 實測通過；受控慢讀檔及完整搜尋／排序回歸則明確列為提交前候選測試。這些結果不代替實機卡頓或真實模型準確率驗證。
+
+## 2026-10-04 完整 raw data、官方 context 核對及詐騙規則
+
+狀態：已實作，2.3.4 候選的本機及指定 vphone 驗證通過；真實 Jev／Clef 的判斷效果仍待驗證。使用者要求完整 request／response，撤回原有 capture 的整理方式。新 capture 保存完整 body bytes、原始 UTF-8 text、URL、可取得的 headers、status 及錯誤，不再以 JSON 解析結果取代 body，不再遮蔽或截斷。Base64 是可還原完整 bytes 的儲存表示。頁面直接呈現 body 原文，Copy 可選 Full Trace、JSON Archive 或各次 request／response body；Bark 自動與手動呼叫仍在同一頁。舊資料已失去的內容無法補回，介面標示 legacy capture。
+
+官方文件容許政策及例子放 state，並未要求全部搬入 instructions。官方原文：「examples」— [TypeSafe State](https://docs.typesafe.ai/concepts/state#state-can-be-a-simple-string-or-a-structured-json-value)，來源直接允許這個輸入。官方 SDK 及公開 Clef encoder 的交叉核對見[研究筆記](jev-instructions-and-raw-trace-review.md)。實作保留 state，instructions 改用 backtick 明確引用 `notification`、`current_policy.rules`、`corrected_examples`，完整定義兩種 should_forward 標籤與 skip 答案的相反方向，並補上 Noul true／false criteria。人工修正是後續 inference 的 context，沒有訓練模型權重，也沒有證據保證改成某個欄位名稱就提高準確率。
+
+預設政策與判斷問題加入明確 scam／fraud／phishing 企圖，同時保留真正的防詐騙警報、交易及驗證碼。最新自訂 prompt 優先，人工例子不能覆蓋現行規則；舊預設 prompt 採用 default-v3，自訂文字保留。Observe／Filter、0.9 門檻及失敗／逾時的轉發邊界沿用。
+
+331 項 assertions 與英文 settings contract 通過。兩個 package 的 ABI、簽署及保存 dSYM UUID 核對通過，最後 RootHide 候選已安裝至 `iOS-26.6.2`，三個 installed binary hash 相符。合成 HTTP 測試核對 AI、自動 Bark 及手動 Bark 的完整 body；每個 response 超過原有 16 KiB 限制，仍與發送端 bytes 相符。原文：「"passed": true」— [2.3.4 runtime 驗證](/Users/wingchan/Project/Ve/packages/raw-trace-2.3.4/runtime-verification.json)。依據關係：受控 receiver／sender 和 App 所存 bytes 的實測，分類分數由 fixture 提供，不能據此聲稱模型可識別真實詐騙。
+
+Request Body 的原文複製另在同一 Settings process 的未儲存 prompt editor 讀回，原文：「"passed": true」— [原文複製驗證](/Users/wingchan/Project/Ve/packages/raw-trace-2.3.4/copy-verification.json)。離開時沒有 Save；vphone 原有設定與 logs 已還原。Capture 的範圍是 App 交給 NSURLSession 及 callback 收到的資料，headers 以系統可取得的值為準。此證據不代表 TLS 封包逐 byte capture。
