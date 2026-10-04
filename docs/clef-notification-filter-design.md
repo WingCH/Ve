@@ -1,10 +1,10 @@
 # Clef 通知篩選設計
 
-設計日期：2026-10-03。實作更新：2026-10-04。狀態：**2.3.2 雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查。指定 vphone 的通知／HTTP、英文 Notification Logs、AI／Bark raw data 及 Copy JSON 驗證通過。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
+設計日期：2026-10-03。實作更新：2026-10-04。狀態：**2.3.4 雙 scheme 正式產物已通過 ABI／簽署／dSYM 檢查，並發布至 GitHub。指定 vphone 的合成通知／HTTP、完整 raw body 及原文複製驗證通過。原有設定及 logs 已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
 
-最新版本：2.3.3 雙 scheme 正式產物已通過 ABI／簽署／dSYM 檢查。正式 RootHide 包已安裝到指定 vphone，binary identity 及介面 smoke 通過；實機卡頓覆核待完成。
+上一版本：2.3.3 雙 scheme 正式產物已通過 ABI／簽署／dSYM 檢查。正式 RootHide 包已安裝到指定 vphone，binary identity 及介面 smoke 通過；實機卡頓覆核待完成。
 
-最新候選：2.3.4 已完成完整 raw capture、修正 context 引用及詐騙判斷規則。雙 scheme 建置與指定 vphone 的合成 HTTP／原文複製驗證通過；尚未發布，真實模型準確率待驗證。
+最新交付：[2.3.4 prerelease](https://github.com/WingCH/Ve/releases/tag/2.3.4)。Rootless／RootHide 安裝包及建置、runtime、SHA256SUMS 紀錄共 5 個 assets 已下載核對，與本機及 GitHub digest 相符。原文：「"all_verified": true」— [發布讀回紀錄](/Users/wingchan/Project/Ve/packages/native-release-2.3.4/published-assets-verified.json)。真實模型準確率待驗證。
 
 ## 已確認的需求
 
@@ -153,12 +153,18 @@ Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆�
 
 ## 2026-10-04 完整 raw data、官方 context 核對及詐騙規則
 
-狀態：已實作，2.3.4 候選的本機及指定 vphone 驗證通過；真實 Jev／Clef 的判斷效果仍待驗證。使用者要求完整 request／response，撤回原有 capture 的整理方式。新 capture 保存完整 body bytes、原始 UTF-8 text、URL、可取得的 headers、status 及錯誤，不再以 JSON 解析結果取代 body，不再遮蔽或截斷。Base64 是可還原完整 bytes 的儲存表示。頁面直接呈現 body 原文，Copy 可選 Full Trace、JSON Archive 或各次 request／response body；Bark 自動與手動呼叫仍在同一頁。舊資料已失去的內容無法補回，介面標示 legacy capture。
+狀態：已處理，2.3.4 正式產物的本機及指定 vphone 驗證通過，GitHub prerelease 已交付；真實 Jev／Clef 的判斷效果仍待驗證。使用者要求完整 request／response，撤回原有 capture 的整理方式。新 capture 保存完整 body bytes、原始 UTF-8 text、URL、可取得的 headers、status 及錯誤，不再以 JSON 解析結果取代 body，不再遮蔽或截斷。Base64 是可還原完整 bytes 的儲存表示。頁面直接呈現 body 原文，Copy 可選 Full Trace、JSON Archive 或各次 request／response body；Bark 自動與手動呼叫仍在同一頁。舊資料已失去的內容無法補回，介面標示 legacy capture。
 
 官方文件容許政策及例子放 state，並未要求全部搬入 instructions。官方原文：「examples」— [TypeSafe State](https://docs.typesafe.ai/concepts/state#state-can-be-a-simple-string-or-a-structured-json-value)，來源直接允許這個輸入。官方 SDK 及公開 Clef encoder 的交叉核對見[研究筆記](jev-instructions-and-raw-trace-review.md)。實作保留 state，instructions 改用 backtick 明確引用 `notification`、`current_policy.rules`、`corrected_examples`，完整定義兩種 should_forward 標籤與 skip 答案的相反方向，並補上 Noul true／false criteria。人工修正是後續 inference 的 context，沒有訓練模型權重，也沒有證據保證改成某個欄位名稱就提高準確率。
 
 預設政策與判斷問題加入明確 scam／fraud／phishing 企圖，同時保留真正的防詐騙警報、交易及驗證碼。最新自訂 prompt 優先，人工例子不能覆蓋現行規則；舊預設 prompt 採用 default-v3，自訂文字保留。Observe／Filter、0.9 門檻及失敗／逾時的轉發邊界沿用。
 
-331 項 assertions 與英文 settings contract 通過。兩個 package 的 ABI、簽署及保存 dSYM UUID 核對通過，最後 RootHide 候選已安裝至 `iOS-26.6.2`，三個 installed binary hash 相符。合成 HTTP 測試核對 AI、自動 Bark 及手動 Bark 的完整 body；每個 response 超過原有 16 KiB 限制，仍與發送端 bytes 相符。原文：「"passed": true」— [2.3.4 runtime 驗證](/Users/wingchan/Project/Ve/packages/raw-trace-2.3.4/runtime-verification.json)。依據關係：受控 receiver／sender 和 App 所存 bytes 的實測，分類分數由 fixture 提供，不能據此聲稱模型可識別真實詐騙。
+331 項 assertions 與英文 settings contract 通過。兩個 package 的 ABI、簽署及保存 dSYM UUID 核對通過，正式 RootHide 包已安裝至 `iOS-26.6.2`，三個 installed binary hash 相符。合成 HTTP 測試核對 AI、自動 Bark 及手動 Bark 的完整 body；每個 response 超過原有 16 KiB 限制，仍與發送端 bytes 相符。原文：「"passed": true」— [2.3.4 正式 runtime 驗證](https://github.com/WingCH/Ve/releases/download/2.3.4/RUNTIME-VERIFICATION-2.3.4.json)。依據關係：正式包的受控 receiver／sender 和 App 所存 bytes 實測，分類分數由 fixture 提供，不能據此聲稱模型可識別真實詐騙。
 
 Request Body 的原文複製另在同一 Settings process 的未儲存 prompt editor 讀回，原文：「"passed": true」— [原文複製驗證](/Users/wingchan/Project/Ve/packages/raw-trace-2.3.4/copy-verification.json)。離開時沒有 Save；vphone 原有設定與 logs 已還原。Capture 的範圍是 App 交給 NSURLSession 及 callback 收到的資料，headers 以系統可取得的值為準。此證據不代表 TLS 封包逐 byte capture。
+
+## 2026-10-04 2.3.4 GitHub 正式交付
+
+正式建置及 release tag 的來源 commit：`c71140e99930692c3b71f58b4717759f9813de0c`。兩次建置時 tracked source 均乾淨，原文：「"source_clean_for_build": true」— [BUILD-INFO-2.3.4.json](https://github.com/WingCH/Ve/releases/download/2.3.4/BUILD-INFO-2.3.4.json)。Rootless SHA-256：`287bdb3e447a702c3ab2f2d0e603500b9d19deb9be171955b6657fbf5500766e`；RootHide SHA-256：`8125c97dfec6d6bda83c2fc9ea969a427b46ee920579f0844c4228efba703e9d`。
+
+正式包重新完成通知／HTTP／原文複製驗證，沒有沿用 binary hash 不同的候選結果。20 項跨 process 重播 assertions、5 項通知授權測試及 bootstrap／installer／Relaxin contracts 亦通過。GitHub 的 5 個 assets 已全部下載核對 bytes、SHA-256 與 API digest。發布後的此文件提交只補交付紀錄，沒有改動正式包的程式碼。
