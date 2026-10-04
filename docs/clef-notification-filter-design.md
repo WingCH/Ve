@@ -2,7 +2,7 @@
 
 設計日期：2026-10-03。實作更新：2026-10-04。狀態：**2.3.2 雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查。指定 vphone 的通知／HTTP、英文 Notification Logs、AI／Bark raw data 及 Copy JSON 驗證通過。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
 
-最新候選：2.3.3 已完成 API 分頁及背景列表載入，vphone 回歸通過；實機卡頓覆核待完成。
+最新版本：2.3.3 雙 scheme 正式產物已通過 ABI／簽署／dSYM 檢查。正式 RootHide 包已安裝到指定 vphone，binary identity 及介面 smoke 通過；實機卡頓覆核待完成。
 
 ## 已確認的需求
 
@@ -129,7 +129,7 @@ Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆�
 
 ## 2026-10-04 API raw data 按服務分頁
 
-狀態：已處理，本機 RootHide candidate 及指定 vphone 介面驗證通過；GitHub 2.3.2 assets 尚未更新。使用者指出合併 JSON 容易把 AI 判斷回覆與 Bark 傳送回覆看成同一份。介面改為 AI API Raw Data、Bark API Raw Data 兩個入口。依使用者補充，Bark 自動轉發及手動補發放在同一頁，各自保留 request／response。儲存及轉發邏輯沿用。
+狀態：已處理，候選及正式 RootHide 產物的指定 vphone 介面驗證通過；以 2.3.3 交付，2.3.2 既有 assets 保留。使用者指出合併 JSON 容易把 AI 判斷回覆與 Bark 傳送回覆看成同一份。介面改為 AI API Raw Data、Bark API Raw Data 兩個入口。依使用者補充，Bark 自動轉發及手動補發放在同一頁，各自保留 request／response。儲存及轉發邏輯沿用。
 
 已讀回兩個入口及各自的 Copy JSON：AI 只包含 AI trace，Bark 只包含 automatic／manual traces。原文：「"passed": true」— [分頁介面驗證](/Users/wingchan/Project/Ve/packages/api-raw-separate-view/ui-verification.json)。依據關係：指定 guest 的 UI 及複製後資料實測；因新版 vphone clipboard RPC 不容許跨 process 讀取，Bark 的複製內容改由同一 App 的未儲存文字編輯頁讀回，離開時沒有儲存或修改 prompt。此驗證只使用既有合成紀錄，沒有送出新 API 請求。
 
@@ -141,4 +141,10 @@ Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆�
 
 相同慢讀檔測試的主線程資料準備由約 1,552 ms 降至約 0.002 ms，列表稍後正確更新。這不代表整個轉場耗時 0.002 ms，也不能代替實機結果。原文：「"max_main_thread_ms": 1551.6953750000084」及「"max_main_thread_ms": 0.001791666818462545」— [修正前](/Users/wingchan/Project/Ve/packages/list-latency/slow-before.json)／[修正後](/Users/wingchan/Project/Ve/packages/list-latency/slow-after.json)。
 
-日期／App 排序、搜尋、取消及再次進入回歸均通過。原文：「"passed": true」— [功能驗證](/Users/wingchan/Project/Ve/packages/list-latency/functional-verification.json)。臨時延遲及 DEBUG instrumentation 已移出 product source，另留在 ignored debug artifacts 方便重現。原有 guest logs 已還原，原文：「"byte_identical": true」— [紀錄還原](/Users/wingchan/Project/Ve/packages/list-latency/logs-restored.json)。本次沒有真實 API 請求或實機操作，剩餘驗收為使用者安裝 2.3.3 候選版本後覆核實機停頓。
+日期／App 排序、搜尋、取消及再次進入回歸均通過。原文：「"passed": true」— [功能驗證](/Users/wingchan/Project/Ve/packages/list-latency/functional-verification.json)。臨時延遲及 DEBUG instrumentation 已移出 product source，另留在 ignored debug artifacts 方便重現。原有 guest logs 已還原，原文：「"byte_identical": true」— [紀錄還原](/Users/wingchan/Project/Ve/packages/list-latency/logs-restored.json)。本次沒有真實 API 請求或實機操作，剩餘驗收為使用者安裝 2.3.3 後覆核實機停頓。
+
+## 2026-10-04 2.3.3 正式產物與 main 整合
+
+使用者要求建置並發布至 GitHub，以及 commit／push 至 main。main 可 fast-forward，保留既有功能分支提交。正式建置來源：`05d498e423f7f2077e11e0970bab80774d2cfac9`，tracked source 在兩次建置時均乾淨。原文：「"source_clean_for_build": true」— [2.3.3 建置紀錄](/Users/wingchan/Project/Ve/packages/native-release-2.3.3/BUILD-INFO-2.3.3.json)。Rootless SHA-256：`4f0bdd9a9b6f79b6e2eb79ade810ee0afdbf7b54a8f309c50d63733d16d31b7f`；RootHide SHA-256：`08ac0a33f07aa1acf3362c1ad47fa7e2fb4923900e84a173a2c1fc533864a495`。兩個 scheme 均通過 ABI、簽署及保存 dSYM UUID 核對。
+
+316 項 AI assertions、20 項跨 process 重播 assertions、5 項通知授權測試，以及 settings／bootstrap／installer／Relaxin contracts 通過。指定 `iOS-26.6.2` 已安裝正式 RootHide 包，三個 installed binary hash 相符。原文：「"package_version_verified": true」及「"passed": true」— [2.3.3 runtime 驗證](/Users/wingchan/Project/Ve/packages/native-release-2.3.3/RUNTIME-VERIFICATION-2.3.3.json)。依據關係：正式包的版本、binary identity、列表進入／再次進入及 AI／Bark reader 實測通過；受控慢讀檔及完整搜尋／排序回歸則明確列為提交前候選測試。這些結果不代替實機卡頓或真實模型準確率驗證。
