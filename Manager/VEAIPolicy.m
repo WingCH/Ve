@@ -5,7 +5,7 @@
 
 @implementation VEAIPolicy
 + (NSString *)defaultPrompt {
-    return @"只略過明確的廣告、促銷或推廣通知。私人訊息、交易紀錄、付款或還款提醒、驗證碼與安全提醒都應轉發。資訊不足或不確定時應轉發。修正例子供參考；若例子與本規則有衝突，以本規則為準。";
+    return @"Skip only clear advertisements, promotions, or marketing notifications. Forward private messages, transaction records, payment or repayment reminders, verification codes, and security alerts. Forward when information is insufficient or uncertain. Use correction examples as guidance. These rules take priority over conflicting examples.";
 }
 
 + (NSString *)providerFromDefaults:(NSUserDefaults *)defaults {
@@ -57,7 +57,7 @@
         @"provider": provider, @"endpoint": [self endpointForProvider:provider defaults:defaults],
         @"account_id": [([defaults stringForKey:kPreferenceKeyAIAccountID] ?: @"") stringByTrimmingCharactersInSet:whitespace],
         @"token": [self tokenForProvider:provider defaults:defaults],
-        @"prompt": prompt, @"prompt_version": [defaults stringForKey:kPreferenceKeyAIPromptVersion] ?: @"default-v1",
+        @"prompt": prompt, @"prompt_version": [defaults stringForKey:kPreferenceKeyAIPromptVersion] ?: @"default-v2",
         @"model": model, @"mode": mode, @"timeout": @(timeout), @"threshold": @(threshold)
     };
 }

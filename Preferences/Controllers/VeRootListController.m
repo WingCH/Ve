@@ -11,6 +11,7 @@
 #import "../NotificationKeys.h"
 #import "../../Manager/LogManager.h"
 #import "../../Manager/VEAIStore.h"
+#import "../../Manager/VEAIPolicy.h"
 #import <math.h>
 #import "../../Utils/JailbreakPath.h"
 
@@ -22,10 +23,39 @@
  */
 - (NSArray *)specifiers {
 	if (!_specifiers) {
-		_specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
+        NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
+        NSString *provider = [VEAIPolicy providerFromDefaults:defaults];
+        NSString *endpoint = [VEAIPolicy endpointForProvider:provider defaults:defaults];
+        BOOL cloudflare = [provider isEqual:@"cloudflare"];
+        BOOL needsAccount = [endpoint containsString:@"{account_id}"];
+        NSMutableArray *visible = [NSMutableArray new];
+        for (PSSpecifier *specifier in [self loadSpecifiersFromPlistName:@"Root" target:self]) {
+            NSString *fieldProvider = [specifier propertyForKey:@"aiProvider"];
+            if (fieldProvider && ![fieldProvider isEqual:provider]) continue;
+            if ([[specifier propertyForKey:@"key"] isEqual:kPreferenceKeyAIAccountID] && !needsAccount) continue;
+            if ([[specifier propertyForKey:@"id"] isEqual:@"ve.ai.connection"]) {
+                [specifier setName:cloudflare ? @"Cloudflare Connection" : @"Jev / System One Connection"];
+                NSString *footer = cloudflare
+                    ? (needsAccount ? @"Cloudflare's REST API requires both an API token and an Account ID. Each provider has its own token and URL."
+                                    : @"This URL does not use the Account ID field. Each provider has its own token and URL.")
+                    : @"Jev uses an API token. No Cloudflare Account ID is needed. Each provider has its own token and URL.";
+                [specifier setProperty:footer forKey:@"footerText"];
+            }
+            if ([[specifier propertyForKey:@"id"] isEqual:@"ve.ai.token"]) {
+                [specifier setName:cloudflare ? @"Cloudflare API Token" : @"Jev API Token"];
+            }
+            [visible addObject:specifier];
+        }
+        _specifiers = visible;
 	}
 
 	return _specifiers;
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    // Endpoint edits can change whether the Account ID field is required.
+    [self reloadSpecifiers];
 }
 
 /**
@@ -42,7 +72,7 @@
         BOOL valid = [scanner scanDouble:&number] && scanner.isAtEnd && isfinite(number);
         valid = valid && ([key isEqual:kPreferenceKeyAITimeout] ? (number > 0 && number <= 120) : (number >= 0.5 && number <= 1));
         if (!valid) {
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"數值無效" message:[key isEqual:kPreferenceKeyAITimeout] ? @"請輸入大於 0、最多 120 的秒數。" : @"請輸入 0.5 至 1 的門檻。" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Invalid Value" message:[key isEqual:kPreferenceKeyAITimeout] ? @"Enter a timeout above 0 and at most 120 seconds." : @"Enter a threshold from 0.5 to 1." preferredStyle:UIAlertControllerStyleAlert];
             [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
             [self presentViewController:alert animated:YES completion:nil];
             [self reloadSpecifiers];
@@ -51,6 +81,7 @@
         value = @(number);
     }
     [super setPreferenceValue:value specifier:specifier];
+    if ([key isEqual:kPreferenceKeyAIProvider]) [self reloadSpecifiers];
 
     if ([[specifier propertyForKey:@"key"] isEqualToString:kPreferenceKeyEnabled]) {
 		[self promptToRespring];
@@ -160,12 +191,12 @@
 }
 
 - (void)clearAICorrectionsPrompt {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"清除修正例子" message:@"刪除全部 AI 修正例子，保留通知紀錄與判斷規則。" preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"清除" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Clear Correction Examples" message:@"Delete all AI correction examples. Keep notification logs and notification rules." preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Clear" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         BOOL saved = [[VEAIStore sharedStore] clearCorrections];
         if (!saved) {
-            UIAlertController *failure = [UIAlertController alertControllerWithTitle:@"未能清除" message:@"無法寫入修正例子，請稍後重試。" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController *failure = [UIAlertController alertControllerWithTitle:@"Unable to Clear" message:@"Could not save correction examples. Try again later." preferredStyle:UIAlertControllerStyleAlert];
             [failure addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
             [self presentViewController:failure animated:YES completion:nil];
         }

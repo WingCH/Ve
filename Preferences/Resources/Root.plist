@@ -265,15 +265,15 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>AI 通知篩選</string>
+			<string>AI Notification Filter</string>
 			<key>footerText</key>
-			<string>可選功能。未設定 token 或關閉 AI 時，沿用原有 Bark 轉發。啟用後會把未封鎖 App 的通知文字送到所選 provider 的 endpoint。不同 provider 分開保存 token 與 URL。</string>
+			<string>Optional. Without a token, or with AI disabled, Bark forwards as before. When enabled, AI receives notification text from unblocked apps.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>label</key>
-			<string>啟用 AI 判斷</string>
+			<string>Enable AI Filter</string>
 			<key>key</key>
 			<string>AIEnabled</string>
 			<key>default</key>
@@ -297,11 +297,19 @@
 			<key>validValues</key>
 			<array><string>cloudflare</string><string>systemone</string></array>
 			<key>validTitles</key>
-			<array><string>Cloudflare Workers AI</string><string>Jev／System One</string></array>
+			<array><string>Cloudflare Workers AI</string><string>Jev / System One</string></array>
 			<key>defaults</key>
 			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>PostNotification</key>
 			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>id</key>
+			<string>ve.ai.connection</string>
+			<key>label</key>
+			<string>AI Connection</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -313,53 +321,11 @@
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSEditTextCell</string>
-			<key>label</key>
-			<string>System One 模型</string>
-			<key>key</key>
-			<string>AISystemOneModel</string>
-			<key>default</key>
-			<string>jev-latest</string>
-			<key>placeholder</key>
-			<string>jev-latest 或相容模型名稱</string>
-			<key>keyboard</key>
-			<string>ASCIICapable</string>
-			<key>autocorrectionType</key>
-			<integer>1</integer>
-			<key>autocapitalizationType</key>
-			<integer>0</integer>
-			<key>defaults</key>
-			<string>codes.wingchan.ve-enhanced.preferences</string>
-			<key>PostNotification</key>
-			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
-		</dict>
-		<dict>
-			<key>cell</key>
 			<string>PSLinkListCell</string>
 			<key>detail</key>
 			<string>PSListItemsController</string>
 			<key>label</key>
-			<string>模式</string>
-			<key>key</key>
-			<string>AIMode</string>
-			<key>default</key>
-			<string>observe</string>
-			<key>validValues</key>
-			<array><string>observe</string><string>filter</string></array>
-			<key>validTitles</key>
-			<array><string>觀察：照常轉發</string><string>攔截：依 AI 判斷</string></array>
-			<key>defaults</key>
-			<string>codes.wingchan.ve-enhanced.preferences</string>
-			<key>PostNotification</key>
-			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>detail</key>
-			<string>PSListItemsController</string>
-			<key>label</key>
-			<string>Cloudflare 模型</string>
+			<string>Cloudflare Model</string>
 			<key>key</key>
 			<string>AIModel</string>
 			<key>default</key>
@@ -372,6 +338,8 @@
 			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>PostNotification</key>
 			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
+			<key>aiProvider</key>
+			<string>cloudflare</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -383,7 +351,7 @@
 			<key>default</key>
 			<string></string>
 			<key>placeholder</key>
-			<string>32 位 Account ID</string>
+			<string>32-character Account ID</string>
 			<key>keyboard</key>
 			<string>ASCIICapable</string>
 			<key>autocorrectionType</key>
@@ -394,6 +362,32 @@
 			<string>codes.wingchan.ve-enhanced.preferences</string>
 			<key>PostNotification</key>
 			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
+			<key>aiProvider</key>
+			<string>cloudflare</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>label</key>
+			<string>Jev Model</string>
+			<key>key</key>
+			<string>AISystemOneModel</string>
+			<key>default</key>
+			<string>jev-latest</string>
+			<key>placeholder</key>
+			<string>jev-latest or a compatible model</string>
+			<key>keyboard</key>
+			<string>ASCIICapable</string>
+			<key>autocorrectionType</key>
+			<integer>1</integer>
+			<key>autocapitalizationType</key>
+			<integer>0</integer>
+			<key>defaults</key>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
+			<key>PostNotification</key>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
+			<key>aiProvider</key>
+			<string>systemone</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -402,12 +396,40 @@
 			<string>API Token</string>
 			<key>detail</key>
 			<string>VeAITokenController</string>
+			<key>id</key>
+			<string>ve.ai.token</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>AI Decisions</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>label</key>
+			<string>Mode</string>
+			<key>key</key>
+			<string>AIMode</string>
+			<key>default</key>
+			<string>observe</string>
+			<key>validValues</key>
+			<array><string>observe</string><string>filter</string></array>
+			<key>validTitles</key>
+			<array><string>Observe: Forward All</string><string>Filter: Apply AI Decision</string></array>
+			<key>defaults</key>
+			<string>codes.wingchan.ve-enhanced.preferences</string>
+			<key>PostNotification</key>
+			<string>codes.wingchan.ve-enhanced.preferences.reload</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>label</key>
-			<string>AI 等待上限（秒）</string>
+			<string>AI Timeout (seconds)</string>
 			<key>key</key>
 			<string>AITimeout</string>
 			<key>default</key>
@@ -423,7 +445,7 @@
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>label</key>
-			<string>略過門檻（0.5–1）</string>
+			<string>Skip Threshold (0.5-1)</string>
 			<key>key</key>
 			<string>AIThreshold</string>
 			<key>default</key>
@@ -439,7 +461,7 @@
 			<key>cell</key>
 			<string>PSLinkCell</string>
 			<key>label</key>
-			<string>全域判斷規則（prompt）</string>
+			<string>Notification Rules (Prompt)</string>
 			<key>detail</key>
 			<string>VePromptEditorController</string>
 		</dict>
@@ -447,7 +469,7 @@
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
-			<string>清除修正例子</string>
+			<string>Clear Correction Examples</string>
 			<key>action</key>
 			<string>clearAICorrectionsPrompt</string>
 		</dict>
@@ -455,7 +477,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>預設先觀察。AI 等待時間必須大於 0，最多 120 秒。攔截門檻是模型分數的操作門檻，不代表實際準確率。人工修正只影響之後的判斷。</string>
+			<string>Observe mode forwards all notifications. AI timeouts and failures also forward. Timeout must be above 0 and at most 120 seconds. The skip threshold does not measure accuracy. Corrections affect future decisions only.</string>
 		</dict>
 		<dict>
 			<key>cell</key>

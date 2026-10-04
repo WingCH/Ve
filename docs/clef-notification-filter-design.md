@@ -88,3 +88,19 @@ Jev 的 endpoint 與模型別名已核對。原文：「POST https://api.typesaf
 Rootless／RootHide candidate 的 arm64／arm64e ABI、簽署及保存 dSYM UUID 已通過。標準 rootless 實機、正式服務認證及真實模型辨識品質仍未測，不沿用舊版本 runtime 成功旗標。
 
 正式 package 來源 commit：`d8c6105344fa2863872bb73596b9b8ea2a41b2bf`。Rootless SHA-256：`101c4e9ad44a0fc64e4f8a236a4d6d131930b7d2d1ed2a13f1299689a0e72d7c`；RootHide SHA-256：`67b61fcd0210fa25a5040ee7975cac43c040535b1375d82ff5f0c1458550ffa2`。最終讀回原文：「"matches_prior": true」— [guest 設定還原](/Users/wingchan/Project/Ve/packages/native-release-2.3.0/guest/preferences-restored.json)。此結果確認測試前設定已還原；新版 Ve 保留在指定 guest，臨時通知 App 已移除。
+
+## 2026-10-04 設定介面修正
+
+狀態：已處理，指定 vphone 介面驗證通過。新增的設定標籤、說明、選單、驗證錯誤及 prompt／token／endpoint 編輯頁改用英文，配合既有 Settings 介面。預設 prompt 改用相同意思的英文規則，識別為 `default-v2`；已儲存的自訂 prompt 保持原值。
+
+連線設定按 provider 顯示。Jev 只顯示 Jev 模型與 token；Cloudflare 只顯示 Clef 模型與 Cloudflare token。兩者分別保存原有 token、URL 及模型值。切換 provider、返回 endpoint 編輯頁後，重新計算可見欄位。
+
+Cloudflare Account ID 僅在選取 Cloudflare 且 endpoint 包含 `{account_id}` 時顯示。標準 REST API 仍需要它。官方原文：「You need your API token and Account ID to use the REST API.」— [Workers AI REST API，第 1 節](https://developers.cloudflare.com/workers-ai/get-started/rest-api/#1-get-api-token-and-account-id)，2026-10-04 核對。依據關係：官方直接列出標準 endpoint 的需要；自訂完整 URL 不使用該變數時，程式已有的替換規則不需要額外 Account ID，介面因此隱藏該欄位。
+
+本機 AI 測試 303 assertions、Preferences schema／英文 UI 契約及通知重播 20 assertions 通過。RootHide arm64／arm64e package 已建置，ABI 檢查通過並安裝到指定 guest。此修正仍為本機變更，沒有更新已發佈的 2.3.0 assets。
+
+指定 guest 已驗證 provider 切換、自訂完整 URL 隱藏 Account ID、Restore Default 恢復欄位，以及英文 prompt／token／endpoint 編輯頁與修正清除對話框。原文：「"passed": true」— [介面驗證](/Users/wingchan/Project/Ve/packages/provider-settings-20261004/ui-verification.json)。依據關係：結果來自實際 UI tree、儲存後設定讀回與安裝 binary SHA-256 比對。兩個臨時修改的設定已還原，來源 log 與修正例子沒有清除。此輪只驗證設定介面及儲存，沒有呼叫真實模型。
+
+## 2.3.1 build
+
+狀態：已實作，待正式 build 驗證。使用者要求將上述設定介面修正產生新 build，版本同步為 2.3.1。沿用兩個獨立 package scheme、來源 commit、ABI／簽署／dSYM UUID 驗證、指定 vphone 安裝讀回及 GitHub prerelease 流程。原有 2.3.0 assets 保留。

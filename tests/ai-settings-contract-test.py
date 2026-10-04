@@ -2,6 +2,7 @@
 """Check the Preferences schema needed by the optional AI controls."""
 from pathlib import Path
 import plistlib
+import re
 
 root = Path(__file__).resolve().parents[1]
 items = plistlib.loads((root / "Preferences/Resources/Root.plist").read_bytes())["items"]
@@ -20,6 +21,19 @@ assert fields["AIModel"]["default"] == "clef"
 assert fields["AISystemOneModel"]["default"] == "jev-latest"
 assert fields["AITimeout"]["default"] == 2
 assert fields["AIThreshold"]["default"] == 0.9
+assert fields["AIModel"]["aiProvider"] == "cloudflare"
+assert fields["AIAccountID"]["aiProvider"] == "cloudflare"
+assert fields["AISystemOneModel"]["aiProvider"] == "systemone"
+assert sum(item.get("id") == "ve.ai.connection" for item in items) == 1
+for item in items:
+    for key in ("label", "footerText", "placeholder", "validTitles"):
+        values = item.get(key, [])
+        if isinstance(values, str):
+            values = [values]
+        assert all(not re.search(r"[\u3400-\u9fff]", value) for value in values), (key, values)
+for path in ("Preferences/Controllers/VeRootListController.m", "Preferences/Controllers/VePromptEditorController.m"):
+    for literal in re.findall(r'@"([^"\n]*)"', (root / path).read_text()):
+        assert not re.search(r"[\u3400-\u9fff]", literal), (path, literal)
 assert not any(item.get("key") == "AIToken" and item["cell"] == "PSEditTextCell" for item in items)
 info = plistlib.loads((root / "Preferences/Resources/Info.plist").read_bytes())
 version = next(line.split(": ", 1)[1] for line in (root / "control").read_text().splitlines() if line.startswith("Version: "))

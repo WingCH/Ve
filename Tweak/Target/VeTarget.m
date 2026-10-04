@@ -17,7 +17,7 @@
 static void insertVeEntries(PSListController *controller) {
     if ([controller specifierForID:@"ve.notification.logs"]) return;
     PSSpecifier *group = [PSSpecifier emptyGroupSpecifier];
-    [group setProperty:@"Ve 通知紀錄、AI 判斷與轉發設定。" forKey:@"footerText"];
+    [group setProperty:@"View notification logs and configure AI filtering and Bark forwarding." forKey:@"footerText"];
     PSSpecifier *logs = [PSSpecifier preferenceSpecifierNamed:@"Notification Logs" target:controller set:nil get:nil detail:[VeLogsListController class] cell:PSLinkCell edit:nil];
     [logs setProperty:@"ve.notification.logs" forKey:@"id"];
     NSMutableArray *entries = [NSMutableArray arrayWithObjects:group, logs, nil];
@@ -25,7 +25,7 @@ static void insertVeEntries(PSListController *controller) {
     if ([bundle load]) {
         Class root = NSClassFromString(@"VeRootListController");
         if (root) {
-            PSSpecifier *settings = [PSSpecifier preferenceSpecifierNamed:@"VE Enhanced 設定" target:controller set:nil get:nil detail:root cell:PSLinkCell edit:nil];
+            PSSpecifier *settings = [PSSpecifier preferenceSpecifierNamed:@"VE Enhanced Settings" target:controller set:nil get:nil detail:root cell:PSLinkCell edit:nil];
             [settings setProperty:@"ve.notification.settings" forKey:@"id"];
             [entries addObject:settings];
         }

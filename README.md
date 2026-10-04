@@ -28,13 +28,17 @@ This is a fork of [Ve](https://github.com/rrk567301/Ve) with added notification 
 
 ### AI 判斷與人工修正（2.3.0）
 
-在 Settings → Notifications → **VE Enhanced 設定** 開啟 AI 區域；同頁 **Notification Logs** 可查看判斷及修正。既有 PreferenceLoader 入口仍保留。
+在 Settings → Notifications → **VE Enhanced Settings** 開啟 AI 區域；同頁 **Notification Logs** 可查看判斷及修正。既有 PreferenceLoader 入口仍保留。
 
 AI 是可選功能。未設定 token 或關閉 AI 時，直接沿用 Bark。啟用後預設先觀察；你可切換至攔截模式，調整等待秒數與略過門檻。Cloudflare 可選 Clef／Clef-flash，Jev／System One 可設定模型名稱、完整 endpoint URL 與各自 token。
 
 全域 prompt 可編輯及還原。每次判斷帶同一 App 最近 10 條人工修正，最新版 prompt 優先。紀錄保存 AI 原判斷、轉發動作及人工標籤；修正不自動補發。刪除通知仍保留修正例子，可另外清除；Reset All Data 會清除它們。
 
 本輪 vphone 測到的是實際通知／HTTP／UI，模型回覆使用本機 fixture。真實 Clef／Jev 的判斷準確率與 rootless 實機仍待驗證。[設計及驗證界線](docs/clef-notification-filter-design.md)。
+
+### AI 設定介面修正（2.3.1）
+
+新增設定及編輯頁統一使用英文。模型、token 及連線欄位按 provider 顯示；Jev 不顯示 Cloudflare 模型或 Account ID。Cloudflare 標準 endpoint 保留所需 Account ID，完整自訂 URL 不使用 `{account_id}` 時隱藏該欄位。原有 token、模型、URL 與自訂 prompt 保留。
 
 ## Compatibility
 

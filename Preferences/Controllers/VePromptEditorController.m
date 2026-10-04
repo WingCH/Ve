@@ -14,7 +14,7 @@ static void VEPostSettingsChange(void) {
 @implementation VePromptEditorController
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"判斷規則";
+    self.title = @"Notification Rules";
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     self.editor = [UITextView new];
     self.editor.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
@@ -29,9 +29,9 @@ static void VEPostSettingsChange(void) {
         [self.editor.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:-12],
         [self.editor.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-12]
     ]];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"儲存" style:UIBarButtonItemStyleDone target:self action:@selector(savePrompt)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStyleDone target:self action:@selector(savePrompt)];
     self.navigationItem.leftItemsSupplementBackButton = YES;
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"還原預設" style:UIBarButtonItemStylePlain target:self action:@selector(restoreDefault)];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Restore Default" style:UIBarButtonItemStylePlain target:self action:@selector(restoreDefault)];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardChanged:) name:UIKeyboardWillChangeFrameNotification object:nil];
 }
 - (void)dealloc { [[NSNotificationCenter defaultCenter] removeObserver:self]; }
@@ -64,14 +64,14 @@ static void VEPostSettingsChange(void) {
     [super viewDidLoad];
     NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier];
     self.provider = [VEAIPolicy providerFromDefaults:defaults];
-    self.title = [self.provider isEqual:@"cloudflare"] ? @"Cloudflare API Token" : @"System One API Token";
+    self.title = [self.provider isEqual:@"cloudflare"] ? @"Cloudflare API Token" : @"Jev API Token";
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     self.tokenField = [UITextField new];
     self.tokenField.secureTextEntry = YES;
     self.tokenField.autocapitalizationType = UITextAutocapitalizationTypeNone;
     self.tokenField.autocorrectionType = UITextAutocorrectionTypeNo;
     self.tokenField.borderStyle = UITextBorderStyleRoundedRect;
-    self.tokenField.placeholder = @"留空即可略過 AI";
+    self.tokenField.placeholder = @"Leave blank to skip AI";
     self.tokenField.accessibilityIdentifier = @"ve.ai.token";
     self.tokenField.text = [VEAIPolicy tokenForProvider:self.provider defaults:defaults];
     self.tokenField.translatesAutoresizingMaskIntoConstraints = NO;
@@ -82,7 +82,7 @@ static void VEPostSettingsChange(void) {
         [self.tokenField.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:-16],
         [self.tokenField.heightAnchor constraintEqualToConstant:48]
     ]];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"儲存" style:UIBarButtonItemStyleDone target:self action:@selector(saveToken)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStyleDone target:self action:@selector(saveToken)];
 }
 - (void)saveToken {
     NSString *token = [self.tokenField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -97,15 +97,29 @@ static void VEPostSettingsChange(void) {
 @implementation VeAIEndpointController
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"AI Endpoint URL";
+    self.title = [self.provider isEqual:@"cloudflare"] ? @"Cloudflare Endpoint URL" : @"Jev Endpoint URL";
     self.tokenField.secureTextEntry = NO;
     self.tokenField.keyboardType = UIKeyboardTypeURL;
     self.tokenField.accessibilityIdentifier = @"ve.ai.endpoint";
-    self.tokenField.placeholder = @"留空使用 provider 預設";
+    self.tokenField.placeholder = @"Leave blank to use the default URL";
     self.tokenField.text = [VEAIPolicy endpointForProvider:self.provider defaults:[[NSUserDefaults alloc] initWithSuiteName:kPreferencesIdentifier]];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"儲存" style:UIBarButtonItemStyleDone target:self action:@selector(saveEndpoint)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStyleDone target:self action:@selector(saveEndpoint)];
     self.navigationItem.leftItemsSupplementBackButton = YES;
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"還原預設" style:UIBarButtonItemStylePlain target:self action:@selector(restoreEndpoint)];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Restore Default" style:UIBarButtonItemStylePlain target:self action:@selector(restoreEndpoint)];
+    UILabel *help = [UILabel new];
+    help.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+    help.textColor = [UIColor secondaryLabelColor];
+    help.numberOfLines = 0;
+    help.text = [self.provider isEqual:@"cloudflare"]
+        ? @"Use {account_id} to insert the Account ID and {model} to insert the selected model. A URL that already contains the Account ID needs no separate Account ID field."
+        : @"Enter a complete System One API URL. The default is https://api.typesafe.ai/v1/systemone. No Cloudflare Account ID is needed.";
+    help.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:help];
+    [NSLayoutConstraint activateConstraints:@[
+        [help.topAnchor constraintEqualToAnchor:self.tokenField.bottomAnchor constant:12],
+        [help.leadingAnchor constraintEqualToAnchor:self.tokenField.leadingAnchor],
+        [help.trailingAnchor constraintEqualToAnchor:self.tokenField.trailingAnchor]
+    ]];
 }
 - (void)restoreEndpoint { self.tokenField.text = [VEAIPolicy defaultEndpointForProvider:self.provider]; }
 - (void)saveEndpoint {
@@ -114,7 +128,7 @@ static void VEPostSettingsChange(void) {
     preview = [[preview stringByReplacingOccurrencesOfString:@"{account_id}" withString:@"00000000000000000000000000000000"] stringByReplacingOccurrencesOfString:@"{model}" withString:@"clef"];
     NSURLComponents *components = [NSURLComponents componentsWithString:preview];
     if (![@[@"http", @"https"] containsObject:components.scheme.lowercaseString] || !components.host.length || components.user || components.password) {
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"URL 無效" message:@"請輸入完整的 HTTP 或 HTTPS endpoint URL。" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Invalid URL" message:@"Enter a complete HTTP or HTTPS endpoint URL." preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
         [self presentViewController:alert animated:YES completion:nil];
         return;
