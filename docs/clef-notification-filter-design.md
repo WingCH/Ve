@@ -1,6 +1,6 @@
 # Clef 通知篩選設計
 
-設計日期：2026-10-03。實作更新：2026-10-04。狀態：**2.3.1 雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查，指定 vphone 的 2.3.1 設定介面及安裝 identity 驗證通過。2.3.0 的通知／HTTP 回歸另保留既有證據。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
+設計日期：2026-10-03。實作更新：2026-10-04。狀態：**2.3.2 雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查。指定 vphone 的通知／HTTP、英文 Notification Logs、AI／Bark raw data 及 Copy JSON 驗證通過。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
 
 ## 已確認的需求
 
@@ -111,7 +111,7 @@ Cloudflare Account ID 僅在選取 Cloudflare 且 endpoint 包含 `{account_id}`
 
 ## 2.3.2 Notification Logs 英文介面
 
-狀態：已實作，待正式 build 及 vphone 驗證。使用者要求 Notification Logs 也改用英文，並詢問 0.9 Skip threshold 的意思。列表 AI 狀態、詳細頁、Bark 狀態、修正／補發及錯誤訊息改用英文，通知內容與修正原因保留原文。詳細頁增加當次儲存的 Skip threshold，與 Skip score 一起顯示。
+狀態：已處理，正式 build 及指定 vphone 驗證通過。使用者要求 Notification Logs 也改用英文，並詢問 0.9 Skip threshold 的意思。列表 AI 狀態、詳細頁、Bark 狀態、修正／補發及錯誤訊息改用英文，通知內容與修正原因保留原文。詳細頁增加當次儲存的 Skip threshold，與 Skip score 一起顯示。
 
 0.9 是略過通知的操作門檻，並不表示實際準確率。原文：「if (probability.doubleValue >= threshold) return @"skip";」— [VEAIPolicy.m:108](/Users/wingchan/Project/Ve/Manager/VEAIPolicy.m:108)，2.3.2 修改時核對。依據關係：程式直接以大於或等於門檻分類為 skip；只有 Filter 模式按分類攔截，Observe 仍照常轉發。本次沒有改動判斷或轉發規則。
 
@@ -120,3 +120,7 @@ Cloudflare Account ID 僅在選取 Cloudflare 且 endpoint 包含 `{account_id}`
 Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆只更新同一紀錄，已刪除或過期 request 不會重新建立紀錄。關閉 AI 或未設定憑證時記錄 not_requested，仍不建立 AI 請求或等待計時器。新 raw data 測試合共 312 assertions，涵蓋 request／response 保存、憑證遮蔽、16 KiB 限制、HTTP failure／transport error 與逾時回覆。
 
 使用者明確選擇 AI 和 Bark request／response，因此 raw data 頁合併顯示 AI、自動 Bark 轉發及最新一次手動補發的獨立資料。Bark 的 API key（包括 URL 路徑）與加密 key 遮蔽；加密傳送時保存實際送出的 ciphertext，不改動原有加密或 payload。手動補發另有 request ID，舊回覆不能覆寫較新的補發紀錄。最終本機測試共 316 assertions 通過。
+
+2.3.2 正式來源 commit：`e4590760a722ad4409d06d4221b75398ba265bfe`。Rootless SHA-256：`df1ea370e5853e4d5c648a6c25b7502736aafd6a136590ac31d0c450f2c86ba7`；RootHide SHA-256：`37fd6ab4346b7964c1d5b01ee1576f11d39697bdef98e81d344fb84011a3c565`。兩個 scheme 的 ABI、簽署及保存 dSYM UUID 通過，installed 三個 binary hash 與正式 RootHide artifact 相符。
+
+指定 guest 的六項通知／HTTP 矩陣、英文 Notification Logs、當次分數／門檻、修正及補發對話框、AI／Bark／手動補發 raw data 與 Copy JSON 已通過。原文：「"passed": true」及「"matches_prior": true」— [2.3.2 runtime 驗證](/Users/wingchan/Project/Ve/packages/native-release-2.3.2/RUNTIME-VERIFICATION-2.3.2.json)。依據關係：實際 HTTP request body 與所存 raw body 相符，憑證遮蔽且逾時／遲到回覆未增加轉發次數；模型分數仍為 fixture，不表示真實模型準確率。測試前設定已還原。
