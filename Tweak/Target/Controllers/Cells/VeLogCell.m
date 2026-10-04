@@ -11,6 +11,20 @@
 #import "../../../../PrivateHeaders.h"
 
 @implementation VeLogCell
+- (void)refreshCellContentsWithSpecifier:(PSSpecifier *)specifier {
+    [super refreshCellContentsWithSpecifier:specifier];
+    Log *previous = self.log;
+    self.log = [specifier propertyForKey:@"log"];
+    if (!self.logTitleLabel) return;
+    self.logTitleLabel.text = self.log.title.length ? self.log.title : [self.log getDisplayName];
+    self.logContentLabel.text = self.log.content.length ? self.log.content : @"N/A";
+    NSString *summary = [VEAIPolicy summaryForInfo:self.log.aiInfo];
+    if (self.log.correction) summary = [summary stringByAppendingString:[self.log.correction[@"should_forward"] boolValue] ? @" · Correction: Forward" : @" · Correction: Skip"];
+    self.aiStatusLabel.text = summary;
+    if (![previous.bundleIdentifier isEqual:self.log.bundleIdentifier]) {
+        self.iconImageView.image = [UIImage _applicationIconImageForBundleIdentifier:self.log.bundleIdentifier format:1 scale:2];
+    }
+}
 /**
  * Initializes the log cell.
  *

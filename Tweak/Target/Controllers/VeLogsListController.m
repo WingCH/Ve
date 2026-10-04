@@ -16,6 +16,15 @@
 #import "VeDetailListController.h"
 #import "../../../Preferences/PreferenceKeys.h"
 
+@interface VeLogsListController ()
+@property(nonatomic, strong) dispatch_queue_t logLoadQueue;
+@property(nonatomic, strong) UIActivityIndicatorView *loadingIndicator;
+@property(nonatomic, strong) NSArray *loadedSpecifiers;
+@property(nonatomic) BOOL loadingLogs;
+@property(nonatomic) BOOL reloadPending;
+@property(nonatomic) NSUInteger reloadGeneration;
+@end
+
 @implementation VeLogsListController
 /**
  * Sets up the controller's view.
@@ -37,7 +46,11 @@
     [[self pullToRefreshControl] setTintColor:[UIColor labelColor]];
     [[self table] setRefreshControl:[self pullToRefreshControl]];
 
-    [self reloadSpecifiers];
+    self.logLoadQueue = dispatch_queue_create("codes.wingchan.ve.logs.load", DISPATCH_QUEUE_SERIAL);
+    self.loadingIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+    self.loadingIndicator.hidesWhenStopped = YES;
+    self.table.backgroundView = self.loadingIndicator;
+    [self.loadingIndicator startAnimating];
 }
 
 /**
@@ -50,7 +63,6 @@
  */
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self reloadSpecifiers];
 
     [self setFilterButton:[[UIButton alloc] init]];
     [[self filterButton] setImage:[[UIImage systemImageNamed:@"line.3.horizontal.decrease.circle"] imageWithConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:23 weight:UIImageSymbolWeightRegular]] forState:UIControlStateNormal];
@@ -111,15 +123,6 @@
  */
 - (void)handlePullToRefresh {
     [self reloadSpecifiers];
-    [[self pullToRefreshControl] endRefreshing];
-
-    [UIView animateWithDuration:0.2 delay:0.2 options:UIViewAnimationOptionCurveEaseInOut animations:^{
-        [[self pullToRefreshControl] setAlpha:0];
-    } completion:^(BOOL finished) {
-        [UIView animateWithDuration:0.2 delay:0.2 options:UIViewAnimationOptionCurveEaseInOut animations:^{
-            [[self pullToRefreshControl] setAlpha:1];
-        } completion:nil];
-    }];
 }
 
 /**
@@ -149,45 +152,57 @@
  * @return The specifiers.
  */
 - (NSArray *)specifiers {
-    _specifiers = [[NSMutableArray alloc] init];
-
-    if ([self searchController] && ![[[[self searchController] searchBar] text] isEqualToString:@""]) {
-        [_specifiers addObjectsFromArray:[self getSpecifiersForSorting:kPreferenceKeySortingSearch withObject:[[[self searchController] searchBar] text]]];
-    } else {
-        [_specifiers addObjectsFromArray:[self getSpecifiersForSorting:pfSorting withObject:nil]];
-    }
-
+    if (self.loadedSpecifiers) _specifiers = [self.loadedSpecifiers mutableCopy];
+    if (!_specifiers) _specifiers = [NSMutableArray arrayWithObject:[PSSpecifier groupSpecifierWithName:@"Loading Notifications..."]];
     return _specifiers;
 }
 
-/**
- * Returns an array of sorted specifiers.
- *
- * @param sorting The sorting mode.
- * @param object The object used to sort with.
- *
- * @return The array of specifiers.
- */
-- (NSArray *)getSpecifiersForSorting:(NSString *)sorting withObject:(id)object {
-    NSArray* specifiers = @[];
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [self reloadSpecifiers];
+}
 
-    id sorter = nil;
-    if ([sorting isEqualToString:kPreferenceKeySortingApplication]) {
-        sorter = [[ApplicationSorter alloc] initWithObject:object];
-    } else if ([sorting isEqualToString:kPreferenceKeySortingDate]) {
-        sorter = [[DateSorter alloc] initWithObject:object];
-    } else if ([sorting isEqualToString:kPreferenceKeySortingSearch]) {
-        sorter = [[SearchSorter alloc] initWithObject:object];
+- (void)reloadSpecifiers {
+    if (!self.logLoadQueue) return;
+    self.reloadGeneration++;
+    if (self.loadingLogs) {
+        self.reloadPending = YES;
+        return;
     }
-    specifiers = [sorter getSpecifiers];
-
-    // The target is this controller and not the sorter.
-    for (PSSpecifier* specifier in specifiers) {
-        [specifier setTarget:self];
-        [specifier setProperty:NSStringFromSelector(@selector(removedSpecifier:)) forKey:PSDeletionActionKey];
-    }
-
-    return specifiers;
+    self.loadingLogs = YES;
+    NSUInteger generation = self.reloadGeneration;
+    NSString *sorting = [pfSorting copy];
+    NSString *search = [self.searchController.searchBar.text copy];
+    if (search.length) sorting = kPreferenceKeySortingSearch;
+    if (_specifiers.count <= 1) [self.loadingIndicator startAnimating];
+    dispatch_async(self.logLoadQueue, ^{
+        id sorter = nil;
+        if ([sorting isEqualToString:kPreferenceKeySortingApplication]) sorter = [[ApplicationSorter alloc] initWithObject:nil];
+        else if ([sorting isEqualToString:kPreferenceKeySortingSearch]) sorter = [[SearchSorter alloc] initWithObject:search];
+        else sorter = [[DateSorter alloc] initWithObject:nil];
+        NSArray *loaded = [sorter getSpecifiers];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.loadingLogs = NO;
+            NSString *currentSearch = self.searchController.searchBar.text ?: @"";
+            NSString *currentSort = currentSearch.length ? kPreferenceKeySortingSearch : pfSorting;
+            BOOL sameQuery = [sorting isEqual:currentSort] && [(search ?: @"") isEqual:currentSearch];
+            if (generation == self.reloadGeneration || sameQuery) {
+                for (PSSpecifier *specifier in loaded) {
+                    [specifier setTarget:self];
+                    [specifier setProperty:NSStringFromSelector(@selector(removedSpecifier:)) forKey:PSDeletionActionKey];
+                }
+                self.loadedSpecifiers = loaded;
+                self->_specifiers = [loaded mutableCopy];
+                [super reloadSpecifiers];
+                [self.loadingIndicator stopAnimating];
+                [self.pullToRefreshControl endRefreshing];
+            }
+            if (self.reloadPending) {
+                self.reloadPending = NO;
+                [self reloadSpecifiers];
+            }
+        });
+    });
 }
 
 /**

@@ -44,6 +44,7 @@
     [specifier setProperty:@(YES) forKey:@"enabled"];
     [specifier setProperty:@(80) forKey:@"height"];
     [specifier setProperty:log forKey:@"log"];
+    if (log.recordID.length) [specifier setProperty:log.recordID forKey:@"id"];
     return specifier;
 }
 @end

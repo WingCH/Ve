@@ -286,13 +286,20 @@
         [button setProperty:@(self.log.recordID.length > 0) forKey:@"enabled"];
         [specifiers addObject:button];
     }
-    PSSpecifier *api = [PSSpecifier preferenceSpecifierNamed:@"Show API Raw Data" target:self set:nil get:nil detail:nil cell:PSButtonCell edit:nil];
-    [api setButtonAction:@selector(showAIAPIRawData)];
-    [specifiers addObject:api];
+    NSArray *apiTitles = @[@"AI API Raw Data", @"Bark API Raw Data"];
+    NSArray *apiChannels = @[@"api_log", @"bark_api_log"];
+    for (NSUInteger i = 0; i < apiTitles.count; i++) {
+        PSSpecifier *api = [PSSpecifier preferenceSpecifierNamed:apiTitles[i] target:self set:nil get:nil detail:nil cell:PSButtonCell edit:nil];
+        [api setProperty:apiChannels[i] forKey:@"apiChannel"];
+        [api setProperty:apiTitles[i] forKey:@"apiTitle"];
+        [api setButtonAction:@selector(showAPIRawData:)];
+        [specifiers addObject:api];
+    }
 }
 
-- (void)showAIAPIRawData {
-    [self.navigationController pushViewController:[[VeAPIRawDataController alloc] initWithRecordID:self.log.recordID] animated:YES];
+- (void)showAPIRawData:(PSSpecifier *)specifier {
+    [self.navigationController pushViewController:[[VeAPIRawDataController alloc] initWithRecordID:self.log.recordID
+        channel:[specifier propertyForKey:@"apiChannel"] title:[specifier propertyForKey:@"apiTitle"]] animated:YES];
 }
 
 - (void)correctToForward { [self promptCorrection:YES]; }

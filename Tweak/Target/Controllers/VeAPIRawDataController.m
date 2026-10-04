@@ -5,18 +5,22 @@
 
 @interface VeAPIRawDataController ()
 @property(nonatomic, copy) NSString *recordID;
+@property(nonatomic, copy) NSString *channel;
 @property(nonatomic, strong) UITextView *viewer;
 @end
 
 @implementation VeAPIRawDataController
-- (instancetype)initWithRecordID:(NSString *)recordID {
+- (instancetype)initWithRecordID:(NSString *)recordID channel:(NSString *)channel title:(NSString *)title {
     self = [super init];
-    if (self) _recordID = [recordID copy];
+    if (self) {
+        _recordID = [recordID copy];
+        _channel = [channel copy];
+        self.title = title;
+    }
     return self;
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"API Raw Data";
     self.view.backgroundColor = UIColor.systemBackgroundColor;
     UILabel *notice = [UILabel new];
     notice.text = @"Credentials are redacted. Each body is limited to 16 KiB. Larger bodies are marked as truncated.";
@@ -48,12 +52,17 @@
 - (void)dealloc { [[NSNotificationCenter defaultCenter] removeObserver:self]; }
 - (void)refresh:(NSNotification *)notification {
     Log *log = [[LogManager sharedInstance] logForRecordID:self.recordID];
-    NSMutableDictionary *trace = [NSMutableDictionary new];
-    if (log.aiInfo[@"api_log"]) trace[@"ai"] = log.aiInfo[@"api_log"];
-    if (log.aiInfo[@"bark_api_log"]) trace[@"bark"] = log.aiInfo[@"bark_api_log"];
-    if (log.aiInfo[@"manual_bark_api_log"]) trace[@"manual_bark"] = log.aiInfo[@"manual_bark_api_log"];
-    if (!trace.count) {
-        self.viewer.text = @"API raw data was not recorded for this notification. New AI and Bark requests record their request and response data.";
+    NSDictionary *trace;
+    if ([self.channel isEqual:@"api_log"]) {
+        trace = log.aiInfo[@"api_log"];
+    } else {
+        NSMutableDictionary *bark = [NSMutableDictionary new];
+        if (log.aiInfo[@"bark_api_log"]) bark[@"automatic"] = log.aiInfo[@"bark_api_log"];
+        if (log.aiInfo[@"manual_bark_api_log"]) bark[@"manual"] = log.aiInfo[@"manual_bark_api_log"];
+        trace = bark;
+    }
+    if (![trace isKindOfClass:[NSDictionary class]] || !trace.count) {
+        self.viewer.text = @"Raw data for this API call was not recorded. New requests record their request and response data.";
         self.navigationItem.rightBarButtonItem.enabled = NO;
         return;
     }

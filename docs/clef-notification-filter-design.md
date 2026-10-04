@@ -2,6 +2,8 @@
 
 設計日期：2026-10-03。實作更新：2026-10-04。狀態：**2.3.2 雙 scheme 正式 artifact 已通過 ABI／簽署／dSYM 檢查。指定 vphone 的通知／HTTP、英文 Notification Logs、AI／Bark raw data 及 Copy JSON 驗證通過。測試設定已還原。真實 Clef／Jev 判斷準確率尚未驗證。**
 
+最新候選：2.3.3 已完成 API 分頁及背景列表載入，vphone 回歸通過；實機卡頓覆核待完成。
+
 ## 已確認的需求
 
 通知處理範圍與 AI 失敗時的轉發行為見 [ADR 0001](adr/0001-ai-forwarding-boundary.md)。人工修正的保留、同 App 最近 10 條例子及獨立補發行為見 [ADR 0002](adr/0002-correction-examples-lifecycle.md)。領域用語見 [CONTEXT.md](../CONTEXT.md)。
@@ -124,3 +126,19 @@ Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆�
 2.3.2 正式來源 commit：`e4590760a722ad4409d06d4221b75398ba265bfe`。Rootless SHA-256：`df1ea370e5853e4d5c648a6c25b7502736aafd6a136590ac31d0c450f2c86ba7`；RootHide SHA-256：`37fd6ab4346b7964c1d5b01ee1576f11d39697bdef98e81d344fb84011a3c565`。兩個 scheme 的 ABI、簽署及保存 dSYM UUID 通過，installed 三個 binary hash 與正式 RootHide artifact 相符。
 
 指定 guest 的六項通知／HTTP 矩陣、英文 Notification Logs、當次分數／門檻、修正及補發對話框、AI／Bark／手動補發 raw data 與 Copy JSON 已通過。原文：「"passed": true」及「"matches_prior": true」— [2.3.2 runtime 驗證](/Users/wingchan/Project/Ve/packages/native-release-2.3.2/RUNTIME-VERIFICATION-2.3.2.json)。依據關係：實際 HTTP request body 與所存 raw body 相符，憑證遮蔽且逾時／遲到回覆未增加轉發次數；模型分數仍為 fixture，不表示真實模型準確率。測試前設定已還原。
+
+## 2026-10-04 API raw data 按服務分頁
+
+狀態：已處理，本機 RootHide candidate 及指定 vphone 介面驗證通過；GitHub 2.3.2 assets 尚未更新。使用者指出合併 JSON 容易把 AI 判斷回覆與 Bark 傳送回覆看成同一份。介面改為 AI API Raw Data、Bark API Raw Data 兩個入口。依使用者補充，Bark 自動轉發及手動補發放在同一頁，各自保留 request／response。儲存及轉發邏輯沿用。
+
+已讀回兩個入口及各自的 Copy JSON：AI 只包含 AI trace，Bark 只包含 automatic／manual traces。原文：「"passed": true」— [分頁介面驗證](/Users/wingchan/Project/Ve/packages/api-raw-separate-view/ui-verification.json)。依據關係：指定 guest 的 UI 及複製後資料實測；因新版 vphone clipboard RPC 不容許跨 process 讀取，Bark 的複製內容改由同一 App 的未儲存文字編輯頁讀回，離開時沒有儲存或修改 prompt。此驗證只使用既有合成紀錄，沒有送出新 API 請求。
+
+## 2026-10-04 Notification Logs 開頁停頓
+
+狀態：已實作，vphone 受控慢讀檔及功能回歸通過，實機覆核待完成。使用者報告約 100 條紀錄，每次進入列表都會停頓一兩秒；要求先轉場，再載入。正常 vphone 的 100 條／5 日合成資料同步載入約 26 ms，未重現同樣實機時長。受控 1.5 秒讀檔延遲在實際 getJson／列表載入路徑重現約 1,552 ms 主線程阻塞。
+
+改為 viewDidAppear 後在背景 queue 準備列表，主線程只使用快照。合併刷新請求，搜尋／排序不同時拒絕舊結果；同一查詢的資料更新可先顯示已有快照，避免持續新通知令載入畫面一直等待。返回頁面保留目前內容。自訂 cell 刷新及 stable record ID 已修正，避免排序／搜尋後顯示舊 cell 文字。
+
+相同慢讀檔測試的主線程資料準備由約 1,552 ms 降至約 0.002 ms，列表稍後正確更新。這不代表整個轉場耗時 0.002 ms，也不能代替實機結果。原文：「"max_main_thread_ms": 1551.6953750000084」及「"max_main_thread_ms": 0.001791666818462545」— [修正前](/Users/wingchan/Project/Ve/packages/list-latency/slow-before.json)／[修正後](/Users/wingchan/Project/Ve/packages/list-latency/slow-after.json)。
+
+日期／App 排序、搜尋、取消及再次進入回歸均通過。原文：「"passed": true」— [功能驗證](/Users/wingchan/Project/Ve/packages/list-latency/functional-verification.json)。臨時延遲及 DEBUG instrumentation 已移出 product source，另留在 ignored debug artifacts 方便重現。原有 guest logs 已還原，原文：「"byte_identical": true」— [紀錄還原](/Users/wingchan/Project/Ve/packages/list-latency/logs-restored.json)。本次沒有真實 API 請求或實機操作，剩餘驗收為使用者安裝 2.3.3 候選版本後覆核實機停頓。
