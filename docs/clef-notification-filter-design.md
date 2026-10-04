@@ -118,3 +118,5 @@ Cloudflare Account ID 僅在選取 Cloudflare 且 endpoint 包含 `{account_id}`
 使用者追加 API raw data。按 AI API 範圍實作：每條新 AI 請求保存遮蔽後的 URL／headers／request body、HTTP status／response body、transport error 及耗時。詳細頁新增可即時更新、捲動及複製 JSON 的 AI API Raw Data 頁。各 body 以 16 KiB 為上限，超出時保留原始 byte count 並標示 truncated。舊紀錄沒有原始請求／回覆時直接標示未有記錄，不重建或補發。
 
 Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆只更新同一紀錄，已刪除或過期 request 不會重新建立紀錄。關閉 AI 或未設定憑證時記錄 not_requested，仍不建立 AI 請求或等待計時器。新 raw data 測試合共 312 assertions，涵蓋 request／response 保存、憑證遮蔽、16 KiB 限制、HTTP failure／transport error 與逾時回覆。
+
+使用者明確選擇 AI 和 Bark request／response，因此 raw data 頁合併顯示 AI、自動 Bark 轉發及最新一次手動補發的獨立資料。Bark 的 API key（包括 URL 路徑）與加密 key 遮蔽；加密傳送時保存實際送出的 ciphertext，不改動原有加密或 payload。手動補發另有 request ID，舊回覆不能覆寫較新的補發紀錄。最終本機測試共 316 assertions 通過。

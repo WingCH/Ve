@@ -42,7 +42,7 @@ AI 是可選功能。未設定 token 或關閉 AI 時，直接沿用 Bark。啟�
 
 ### Notification Logs 英文介面（2.3.2）
 
-通知列表、AI 狀態、詳細頁、修正及補發介面統一使用英文。通知內容及使用者填寫的修正原因保留原文。詳細頁顯示當次的 Skip score 與 Skip threshold。 新 AI 請求另提供 Show AI API Raw Data，可查看及複製 request、response、HTTP status 與 transport error。憑證遮蔽，body 最多 16 KiB，超出時標示 truncated；舊紀錄未保存的 raw data 不會補造。
+通知列表、AI 狀態、詳細頁、修正及補發介面統一使用英文。通知內容及使用者填寫的修正原因保留原文。詳細頁顯示當次的 Skip score 與 Skip threshold。 新 AI 和 Bark 請求另提供 Show API Raw Data，可查看及複製 request、response、HTTP status 與 transport error。憑證遮蔽，body 最多 16 KiB，超出時標示 truncated；舊紀錄未保存的 raw data 不會補造。
 
 Skip threshold 是略過通知的分數門檻。Filter 模式在分數大於或等於門檻時略過轉發，其他分數照常轉發。預設 0.9 表示略過分數至少 0.9 才攔截，並不代表實際準確率達 90%。Observe 模式仍照常轉發。
 

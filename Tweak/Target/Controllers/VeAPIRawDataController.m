@@ -16,7 +16,7 @@
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"AI API Raw Data";
+    self.title = @"API Raw Data";
     self.view.backgroundColor = UIColor.systemBackgroundColor;
     UILabel *notice = [UILabel new];
     notice.text = @"Credentials are redacted. Each body is limited to 16 KiB. Larger bodies are marked as truncated.";
@@ -48,9 +48,12 @@
 - (void)dealloc { [[NSNotificationCenter defaultCenter] removeObserver:self]; }
 - (void)refresh:(NSNotification *)notification {
     Log *log = [[LogManager sharedInstance] logForRecordID:self.recordID];
-    NSDictionary *trace = log.aiInfo[@"api_log"];
-    if (!trace) {
-        self.viewer.text = @"API raw data was not recorded for this notification. New AI requests record their request and response data.";
+    NSMutableDictionary *trace = [NSMutableDictionary new];
+    if (log.aiInfo[@"api_log"]) trace[@"ai"] = log.aiInfo[@"api_log"];
+    if (log.aiInfo[@"bark_api_log"]) trace[@"bark"] = log.aiInfo[@"bark_api_log"];
+    if (log.aiInfo[@"manual_bark_api_log"]) trace[@"manual_bark"] = log.aiInfo[@"manual_bark_api_log"];
+    if (!trace.count) {
+        self.viewer.text = @"API raw data was not recorded for this notification. New AI and Bark requests record their request and response data.";
         self.navigationItem.rightBarButtonItem.enabled = NO;
         return;
     }

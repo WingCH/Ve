@@ -101,13 +101,19 @@
 }
 
 - (BOOL)updateAIForRecordID:(NSString *)recordID requestID:(NSString *)requestID changes:(NSDictionary *)changes {
+    return [self updateRecordID:recordID matchKey:@"request_id" requestID:requestID changes:changes];
+}
+- (BOOL)updateManualForRecordID:(NSString *)recordID requestID:(NSString *)requestID changes:(NSDictionary *)changes {
+    return [self updateRecordID:recordID matchKey:@"manual_request_id" requestID:requestID changes:changes];
+}
+- (BOOL)updateRecordID:(NSString *)recordID matchKey:(NSString *)matchKey requestID:(NSString *)requestID changes:(NSDictionary *)changes {
     if (!recordID.length) return NO;
     NSNumber *result = [self performLocked:^id {
         NSMutableDictionary *json = [self readJSON:@"logs.json"];
         for (NSMutableDictionary *log in json[@"logs"]) {
             if (![log[@"record_id"] isEqual:recordID]) continue;
             NSMutableDictionary *info = [log[@"ai"] mutableCopy] ?: [NSMutableDictionary new];
-            if (requestID && ![info[@"request_id"] isEqual:requestID]) return @NO;
+            if (requestID && ![info[matchKey] isEqual:requestID]) return @NO;
             [info addEntriesFromDictionary:changes];
             log[@"ai"] = info;
             return @([self writeJSON:json name:@"logs.json"]);

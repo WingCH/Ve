@@ -33,6 +33,10 @@ typedef NS_ENUM(NSInteger, BarkNotificationLevel) {
                             threadID:(NSString *)threadID
                           bulletinID:(NSString *)bulletinID
                           completion:(void (^)(NSString *status))completion;
+- (void)forwardNotificationWithTitle:(NSString *)title subtitle:(NSString *)subtitle body:(NSString *)body
+                    bundleIdentifier:(NSString *)bundleIdentifier level:(BarkNotificationLevel)level
+                            threadID:(NSString *)threadID bulletinID:(NSString *)bulletinID
+                               trace:(void (^)(NSDictionary *))trace completion:(void (^)(NSString *))completion;
 
 // Convenience method to generate bulletinID based on notification content
 - (NSString *)generateBulletinIDForBundleIdentifier:(NSString *)bundleIdentifier

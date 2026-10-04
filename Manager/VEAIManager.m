@@ -14,10 +14,13 @@
 }
 
 - (void)forwardNotification:(NSDictionary *)notification completion:(void (^)(NSString *))completion {
+    [self forwardNotification:notification trace:nil completion:completion];
+}
+- (void)forwardNotification:(NSDictionary *)notification trace:(void (^)(NSDictionary *))trace completion:(void (^)(NSString *))completion {
     [[BarkManager sharedInstance] forwardNotificationWithTitle:notification[@"title"] subtitle:nil
         body:notification[@"content"] bundleIdentifier:notification[@"bundle_identifier"]
         level:[notification[@"forward_level"] integerValue] threadID:notification[@"thread_id"]
-        bulletinID:notification[@"bulletin_id"] completion:completion];
+        bulletinID:notification[@"bulletin_id"] trace:trace completion:completion];
 }
 
 - (void)processRecordID:(NSString *)recordID level:(BarkNotificationLevel)level {
@@ -54,7 +57,10 @@
         }
         void (^action)(BOOL, NSString *) = ^(BOOL forward, NSString *reason) {
             [store updateAIForRecordID:recordID requestID:requestID changes:@{@"action": reason, @"bark_status": forward ? @"sending" : @"not_attempted"}];
-            if (forward) [self forwardNotification:notification completion:^(NSString *status) {
+            [store updateAIForRecordID:recordID requestID:requestID changes:@{@"bark_api_log": @{@"state": forward ? @"pending" : @"not_requested", @"reason": reason}}];
+            if (forward) [self forwardNotification:notification trace:^(NSDictionary *trace) {
+                [store updateAIForRecordID:recordID requestID:requestID changes:@{@"bark_api_log": trace}];
+            } completion:^(NSString *status) {
                 [store updateAIForRecordID:recordID requestID:requestID changes:@{@"bark_status": status}];
             }];
         };
@@ -85,9 +91,12 @@
         NSMutableDictionary *notification = [[store notificationForRecordID:recordID] mutableCopy];
         if (!notification) { completion(@"deleted"); return; }
         notification[@"forward_level"] = @(BarkNotificationLevelActive);
-        [store updateAIForRecordID:recordID requestID:nil changes:@{@"manual_bark_status": @"sending"}];
-        [self forwardNotification:notification completion:^(NSString *status) {
-            [store updateAIForRecordID:recordID requestID:nil changes:@{@"manual_bark_status": status}];
+        NSString *manualID = [NSUUID UUID].UUIDString;
+        [store updateAIForRecordID:recordID requestID:nil changes:@{@"manual_request_id": manualID, @"manual_bark_status": @"sending", @"manual_bark_api_log": @{@"state": @"pending"}}];
+        [self forwardNotification:notification trace:^(NSDictionary *trace) {
+            [store updateManualForRecordID:recordID requestID:manualID changes:@{@"manual_bark_api_log": trace}];
+        } completion:^(NSString *status) {
+            [store updateManualForRecordID:recordID requestID:manualID changes:@{@"manual_bark_status": status}];
             completion(status);
         }];
     });

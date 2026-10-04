@@ -286,7 +286,7 @@
         [button setProperty:@(self.log.recordID.length > 0) forKey:@"enabled"];
         [specifiers addObject:button];
     }
-    PSSpecifier *api = [PSSpecifier preferenceSpecifierNamed:@"Show AI API Raw Data" target:self set:nil get:nil detail:nil cell:PSButtonCell edit:nil];
+    PSSpecifier *api = [PSSpecifier preferenceSpecifierNamed:@"Show API Raw Data" target:self set:nil get:nil detail:nil cell:PSButtonCell edit:nil];
     [api setButtonAction:@selector(showAIAPIRawData)];
     [specifiers addObject:api];
 }

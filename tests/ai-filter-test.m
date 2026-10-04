@@ -47,6 +47,9 @@ static void unit(VEAIStore *store) {
     check([store setCorrectionForRecordID:@"a0" shouldForward:@YES reason:@"keep"], @"human override");
     check([[store notificationForRecordID:@"a0"][@"ai"][@"decision"] isEqual:@"skip"], @"human corrections preserve original AI output");
     check(![store updateAIForRecordID:@"a0" requestID:@"obsolete" changes:@{@"decision": @"forward"}], @"reject obsolete requests");
+    check([store updateAIForRecordID:@"a0" requestID:nil changes:@{@"manual_request_id": @"manual-new"}], @"start a separate manual request");
+    check(![store updateManualForRecordID:@"a0" requestID:@"manual-old" changes:@{@"manual_bark_status": @"failed"}], @"obsolete manual callbacks cannot overwrite a newer request");
+    check([store updateManualForRecordID:@"a0" requestID:@"manual-new" changes:@{@"manual_bark_status": @"accepted"}] && [[store notificationForRecordID:@"a0"][@"ai"][@"request_id"] isEqual:@"r1"], @"manual request updates preserve the automatic request identity");
     [store performLocked:^id {
         NSMutableDictionary *json = [store readJSON:@"logs.json"];
         NSIndexSet *indices = [json[@"logs"] indexesOfObjectsPassingTest:^BOOL(NSDictionary *log, NSUInteger index, BOOL *stop) { return [log[@"record_id"] isEqual:@"a11"]; }];
@@ -151,8 +154,12 @@ static NSMutableArray *capturedRequests;
 @implementation BarkManager
 + (instancetype)sharedInstance { static BarkManager *manager; static dispatch_once_t once; dispatch_once(&once, ^{ manager = [self new]; }); return manager; }
 - (void)forwardNotificationWithTitle:(NSString *)title subtitle:(NSString *)subtitle body:(NSString *)body bundleIdentifier:(NSString *)bundleIdentifier level:(BarkNotificationLevel)level threadID:(NSString *)threadID bulletinID:(NSString *)bulletinID completion:(void (^)(NSString *))completion {
+    [self forwardNotificationWithTitle:title subtitle:subtitle body:body bundleIdentifier:bundleIdentifier level:level threadID:threadID bulletinID:bulletinID trace:nil completion:completion];
+}
+- (void)forwardNotificationWithTitle:(NSString *)title subtitle:(NSString *)subtitle body:(NSString *)body bundleIdentifier:(NSString *)bundleIdentifier level:(BarkNotificationLevel)level threadID:(NSString *)threadID bulletinID:(NSString *)bulletinID trace:(void (^)(NSDictionary *))trace completion:(void (^)(NSString *))completion {
     atomic_fetch_add(&barkCount, 1);
     if (completion) completion(@"accepted");
+    if (trace) trace(@{@"state": @"completed", @"request": @{@"method": @"POST"}, @"response": @{@"status_code": @200, @"body_json": @{@"code": @200}}});
 }
 @end
 
@@ -205,6 +212,7 @@ static void managerTests(VEAIStore *store) {
     [[VEAIManager sharedInstance] resendRecordID:corrected completion:^(NSString *status) {}];
     check(waitFor(^BOOL { return [info(store, corrected)[@"manual_bark_status"] isEqual:@"accepted"]; }, 2) && atomic_load(&barkCount) == before + 1, @"explicit resend has its own result");
     check([info(store, corrected)[@"decision"] isEqual:@"skip"], @"resend preserves original AI judgement");
+    check(waitFor(^BOOL { return [info(store, corrected)[@"manual_bark_api_log"][@"response"][@"status_code"] integerValue] == 200; }, 2), @"manual Bark request has separate raw data");
     [defaults setObject:@"latest prompt" forKey:kPreferenceKeyAIPrompt];
     fakeScore = 0.02; record = addRecord(store, @"app.a"); process(record);
     check(waitFor(^BOOL { return [info(store, record)[@"bark_status"] isEqual:@"accepted"]; }, 3), @"keep decision forwards");

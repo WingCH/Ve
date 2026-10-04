@@ -10,6 +10,7 @@
 - (BOOL)writeJSON:(NSDictionary *)json name:(NSString *)name;
 - (NSDictionary *)notificationForRecordID:(NSString *)recordID;
 - (BOOL)updateAIForRecordID:(NSString *)recordID requestID:(NSString *)requestID changes:(NSDictionary *)changes;
+- (BOOL)updateManualForRecordID:(NSString *)recordID requestID:(NSString *)requestID changes:(NSDictionary *)changes;
 - (NSDictionary *)correctionForRecordID:(NSString *)recordID;
 - (BOOL)setCorrectionForRecordID:(NSString *)recordID shouldForward:(NSNumber *)shouldForward reason:(NSString *)reason;
 - (NSArray *)examplesForApp:(NSString *)bundleIdentifier limit:(NSUInteger)limit blockedApps:(NSArray *)blockedApps;
