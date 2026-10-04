@@ -83,6 +83,24 @@ python3 tests/ai-settings-contract-test.py
 
 2.2.3 改用穩定的 publisher ID 比對 respring 重播，並保留新內容、新日期及不同通知的正常轉發。指定 vphone 的實際通知／HTTP 驗證已通過；詳見 [重播修正及驗證](docs/respring-notification-replay.md)。
 
+## vphone 測試的通知權限
+
+Ve 測試 App 的通知 Allow 由測試流程處理，使用者無須逐次點擊。授權階段先使用 sandbox-signed fixture；取得通知權限後，才使用可存取全域測試設定的版本。
+
+`scripts/vphone-allow-notifications.py` 只處理指定 machine 及 App 的通知提示。它使用本機 Tesseract 讀取 vphone screenshot，定位 Allow，並以 fixture 新寫出的 `permission.json` 核對 `granted: true`。其他 App、相機等提示或不明確的按鈕不會點擊。已授權時直接沿用權限。
+
+```sh
+python3 scripts/vphone-allow-notifications.py \
+  --machine iOS-26.6.2 \
+  --bundle-id codes.wingchan.ve-ai-runtime-test \
+  --app-name 'Ve AI Runtime Test' \
+  --result-path '<apps.data_dir 回傳的 data_path>/Documents/permission.json'
+
+python3 tests/vphone-notification-permission-test.py
+```
+
+測試 App 的 Grant Notification Permission 按鈕只要求通知權限，不發送通知或修改 Ve 設定。測試後還原 Ve 設定，並重用測試 App，減少重新安裝後再次出現授權提示。
+
 ## Credits
 - **Original Project**: [Ve by Alexandra Aurora Göttlicher, 74k1_](https://github.com/rrk567301/Ve)
 - **Enhanced by**: Wing CHAN

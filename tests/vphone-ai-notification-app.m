@@ -28,8 +28,8 @@ static void saveReport(NSDictionary *report, NSString *name) {
     self.status.numberOfLines = 5;
     self.status.text = @"Ve AI runtime fixture\n只使用合成通知及本機 HTTP 接收端。";
     [self.view addSubview:self.status];
-    NSArray *titles = @[@"套用測試設定", @"發送合成通知", @"還原原有設定"];
-    NSArray *actions = @[@"configure", @"send", @"restore"];
+    NSArray *titles = @[@"套用測試設定", @"發送合成通知", @"還原原有設定", @"Grant Notification Permission"];
+    NSArray *actions = @[@"configure", @"send", @"restore", @"authorize"];
     for (NSUInteger i = 0; i < titles.count; i++) {
         UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
         button.frame = CGRectMake(20, 200 + i * 80, 390, 60);
@@ -38,6 +38,12 @@ static void saveReport(NSDictionary *report, NSString *name) {
         [button addTarget:self action:NSSelectorFromString(actions[i]) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:button];
     }
+}
+- (void)authorize {
+    NSString *requestID = [NSUUID UUID].UUIDString;
+    [UNUserNotificationCenter.currentNotificationCenter requestAuthorizationWithOptions:UNAuthorizationOptionAlert | UNAuthorizationOptionSound completionHandler:^(BOOL granted, NSError *error) {
+        saveReport(@{@"request_id": requestID, @"granted": @(granted), @"error": error ? error.localizedDescription : @""}, @"permission.json");
+    }];
 }
 - (NSDictionary *)parameters {
     NSData *data = [NSData dataWithContentsOfFile:document(@"parameters.json")];
