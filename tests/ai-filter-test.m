@@ -3,6 +3,7 @@
 #import "../Manager/VEAIPolicy.h"
 #import "../Manager/VEAIGate.h"
 #import "../Manager/VEAIManager.h"
+#import "../Manager/VEAPILog.h"
 #import "../Preferences/PreferenceKeys.h"
 #include <stdatomic.h>
 
@@ -91,6 +92,19 @@ static void unit(VEAIStore *store) {
     check([VEAIPolicy skipProbabilityFromResponse:encoded(@{@"answers": @[]}) statusCode:200 provider:@"systemone"] == nil, @"reject malformed answers");
     check([[VEAIPolicy decisionForProbability:@0.90 threshold:0.90] isEqual:@"skip"], @"threshold boundary");
     check([[VEAIPolicy decisionForProbability:@0.7 threshold:0.90] isEqual:@"uncertain"], @"uncertain decisions stay open");
+    NSMutableURLRequest *rawRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://fixture.invalid/run?api_key=query-secret&model=clef"]];
+    [rawRequest setValue:@"Bearer header-secret" forHTTPHeaderField:@"Authorization"];
+    rawRequest.HTTPBody = encoded(@{@"state": @{@"token": @"body-secret", @"notification": @"keep this notification"}});
+    NSDictionary *raw = [VEAPILog request:rawRequest secrets:@[@"header-secret"]];
+    NSString *rawText = [[NSString alloc] initWithData:encoded(raw) encoding:NSUTF8StringEncoding];
+    check(![rawText containsString:@"header-secret"] && ![rawText containsString:@"query-secret"] && ![rawText containsString:@"body-secret"], @"raw log redacts header, URL and nested JSON credentials");
+    check([raw[@"body_json"][@"state"][@"notification"] isEqual:@"keep this notification"], @"raw log preserves notification data");
+    NSData *large = [[@"response " stringByPaddingToLength:20000 withString:@"x" startingAtIndex:0] dataUsingEncoding:NSUTF8StringEncoding];
+    raw = [VEAPILog response:nil data:large error:nil secrets:@[]];
+    check([raw[@"truncated"] boolValue] && [raw[@"body_text"] length] == 16384 && [raw[@"byte_count"] integerValue] == 20000, @"raw body has a bounded preview and original size");
+    NSError *transport = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:@{NSLocalizedDescriptionKey: @"timeout header-secret"}];
+    raw = [VEAPILog response:nil data:nil error:transport secrets:@[@"header-secret"]];
+    check([raw[@"error"][@"code"] integerValue] == NSURLErrorTimedOut && ![raw[@"error"][@"message"] containsString:@"header-secret"], @"raw log records redacted transport errors");
     check([store clearCorrections] && ![store correctionForRecordID:@"b0"], @"clear all examples");
     check([store notificationForRecordID:@"a0"] != nil, @"clearing examples preserves source notifications");
     [defaults removePersistentDomainForName:kPreferencesIdentifier];
@@ -177,6 +191,10 @@ static void managerTests(VEAIStore *store) {
     record = addRecord(store, @"app.a"); process(record);
     check(waitFor(^BOOL { return [info(store, record)[@"state"] isEqual:@"classified"] && [info(store, record)[@"bark_status"] isEqual:@"accepted"]; }, 3), @"observation completes the typed request");
     check([info(store, record)[@"decision"] isEqual:@"skip"] && [info(store, record)[@"action"] isEqual:@"observe"], @"observation preserves both AI skip and actual forwarding");
+    check(waitFor(^BOOL { return [info(store, record)[@"api_log"][@"state"] isEqual:@"completed"]; }, 2), @"request and response are persisted for the notification");
+    NSDictionary *api = info(store, record)[@"api_log"];
+    check([api[@"response"][@"status_code"] integerValue] == 200 && [api[@"response"][@"body_json"][@"answers"][@"skip_bark"][@"noul"] doubleValue] == fakeScore, @"raw API response retains the provider payload");
+    check([api[@"request"][@"body_json"][@"model"] isEqual:@"jev-latest"] && ![[NSString stringWithFormat:@"%@", api] containsString:@"synthetic-test-token"], @"stored request has the model and no bearer token");
     [defaults setObject:@"filter" forKey:kPreferenceKeyAIMode];
     int before = atomic_load(&barkCount);
     record = addRecord(store, @"app.a"); process(record);
@@ -198,12 +216,14 @@ static void managerTests(VEAIStore *store) {
     check(waitFor(^BOOL { return [info(store, record)[@"bark_status"] isEqual:@"accepted"]; }, 3) && [info(store, record)[@"action"] isEqual:@"uncertain"], @"uncertain result forwards");
     fakeStatus = 500; record = addRecord(store, @"app.a"); process(record);
     check(waitFor(^BOOL { return [info(store, record)[@"bark_status"] isEqual:@"accepted"]; }, 3) && [info(store, record)[@"state"] isEqual:@"failed"], @"API failure forwards");
+    check(waitFor(^BOOL { return [info(store, record)[@"api_log"][@"response"][@"status_code"] integerValue] == 500; }, 2), @"HTTP failures retain their raw API response");
     fakeStatus = 200; fakeScore = 0.99; fakeDelay = 0.2;
     [defaults setDouble:0.05 forKey:kPreferenceKeyAITimeout];
     before = atomic_load(&barkCount); record = addRecord(store, @"app.a"); process(record);
     check(waitFor(^BOOL { return [info(store, record)[@"bark_status"] isEqual:@"accepted"]; }, 2), @"timeout forwards");
     check(waitFor(^BOOL { return [info(store, record)[@"state"] isEqual:@"classified"]; }, 2), @"late AI response is recorded");
     check(atomic_load(&barkCount) == before + 1 && [info(store, record)[@"action"] isEqual:@"timeout"] && [info(store, record)[@"late"] boolValue], @"late skip neither undoes nor repeats forwarding");
+    check(waitFor(^BOOL { return [info(store, record)[@"api_log"][@"response"][@"status_code"] integerValue] == 200; }, 2), @"late responses update raw data without another forwarding action");
     int requestsBefore = atomic_load(&requestCount);
     [defaults setObject:@[@"app.a"] forKey:kPreferenceKeyBlockedSenders];
     record = addRecord(store, @"app.a"); process(record);

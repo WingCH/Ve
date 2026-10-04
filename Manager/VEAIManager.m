@@ -44,7 +44,8 @@
         NSDictionary *initial = @{
             @"request_id": requestID, @"state": enabled ? (configured ? @"pending" : @"not_configured") : @"disabled",
             @"provider": settings[@"provider"], @"model": settings[@"model"], @"mode": settings[@"mode"], @"threshold": settings[@"threshold"],
-            @"prompt_version": settings[@"prompt_version"], @"started_at": @([NSDate date].timeIntervalSince1970)
+            @"prompt_version": settings[@"prompt_version"], @"started_at": @([NSDate date].timeIntervalSince1970),
+            @"api_log": @{@"state": enabled && configured ? @"pending" : @"not_requested", @"reason": enabled ? (configured ? @"awaiting_request" : @"not_configured") : @"disabled"}
         };
         if (![store updateAIForRecordID:recordID requestID:nil changes:initial]) {
             // History eviction or an unavailable metadata file must not swallow forwarding.
@@ -70,7 +71,9 @@
             }];
         [gate start];
         VEAIClient *client = [[VEAIClient alloc] initWithSession:[NSURLSession sharedSession]];
-        [client evaluateNotification:notification settings:settings examples:examples completion:^(NSNumber *probability, NSString *errorCode) {
+        [client evaluateNotification:notification settings:settings examples:examples trace:^(NSDictionary *trace) {
+            [store updateAIForRecordID:recordID requestID:requestID changes:@{@"api_log": trace}];
+        } completion:^(NSNumber *probability, NSString *errorCode) {
             [gate receiveProbability:probability errorCode:errorCode];
         }];
     });

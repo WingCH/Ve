@@ -10,6 +10,7 @@ mkdir -p "$VE_TEST_DIRECTORY"
   "$TESTS_DIR/ai-filter-test.m" \
   "$TESTS_DIR/../Manager/VEAIStore.m" "$TESTS_DIR/../Manager/VEAIPolicy.m" \
   "$TESTS_DIR/../Manager/VEAIGate.m" "$TESTS_DIR/../Manager/VEAIClient.m" \
+  "$TESTS_DIR/../Manager/VEAPILog.m" \
   "$TESTS_DIR/../Manager/VEAIManager.m" -framework Foundation -o "$TEST_DIRECTORY/test"
 "$TEST_DIRECTORY/test" --unit
 "$TEST_DIRECTORY/test" --write-ai &

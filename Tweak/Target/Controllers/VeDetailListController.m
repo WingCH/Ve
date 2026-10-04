@@ -14,6 +14,7 @@
 #import "../../../Manager/VEAIStore.h"
 #import "../../../Manager/VEAIManager.h"
 #import "VeAttachmentListController.h"
+#import "VeAPIRawDataController.h"
 #import "../Controllers/Cells/VeDetailCell.h"
 #import "../Controllers/Cells/VeAttachmentCell.h"
 #import "../../../Utils/DateUtil.h"
@@ -285,6 +286,13 @@
         [button setProperty:@(self.log.recordID.length > 0) forKey:@"enabled"];
         [specifiers addObject:button];
     }
+    PSSpecifier *api = [PSSpecifier preferenceSpecifierNamed:@"Show AI API Raw Data" target:self set:nil get:nil detail:nil cell:PSButtonCell edit:nil];
+    [api setButtonAction:@selector(showAIAPIRawData)];
+    [specifiers addObject:api];
+}
+
+- (void)showAIAPIRawData {
+    [self.navigationController pushViewController:[[VeAPIRawDataController alloc] initWithRecordID:self.log.recordID] animated:YES];
 }
 
 - (void)correctToForward { [self promptCorrection:YES]; }

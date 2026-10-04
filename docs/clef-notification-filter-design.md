@@ -114,3 +114,7 @@ Cloudflare Account ID 僅在選取 Cloudflare 且 endpoint 包含 `{account_id}`
 狀態：已實作，待正式 build 及 vphone 驗證。使用者要求 Notification Logs 也改用英文，並詢問 0.9 Skip threshold 的意思。列表 AI 狀態、詳細頁、Bark 狀態、修正／補發及錯誤訊息改用英文，通知內容與修正原因保留原文。詳細頁增加當次儲存的 Skip threshold，與 Skip score 一起顯示。
 
 0.9 是略過通知的操作門檻，並不表示實際準確率。原文：「if (probability.doubleValue >= threshold) return @"skip";」— [VEAIPolicy.m:108](/Users/wingchan/Project/Ve/Manager/VEAIPolicy.m:108)，2.3.2 修改時核對。依據關係：程式直接以大於或等於門檻分類為 skip；只有 Filter 模式按分類攔截，Observe 仍照常轉發。本次沒有改動判斷或轉發規則。
+
+使用者追加 API raw data。按 AI API 範圍實作：每條新 AI 請求保存遮蔽後的 URL／headers／request body、HTTP status／response body、transport error 及耗時。詳細頁新增可即時更新、捲動及複製 JSON 的 AI API Raw Data 頁。各 body 以 16 KiB 為上限，超出時保留原始 byte count 並標示 truncated。舊紀錄沒有原始請求／回覆時直接標示未有記錄，不重建或補發。
+
+Raw data 與原有 AI metadata 共用 request ID 及 store lock，遲到回覆只更新同一紀錄，已刪除或過期 request 不會重新建立紀錄。關閉 AI 或未設定憑證時記錄 not_requested，仍不建立 AI 請求或等待計時器。新 raw data 測試合共 312 assertions，涵蓋 request／response 保存、憑證遮蔽、16 KiB 限制、HTTP failure／transport error 與逾時回覆。

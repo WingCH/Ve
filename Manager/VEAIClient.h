@@ -3,4 +3,5 @@
 @interface VEAIClient : NSObject
 - (instancetype)initWithSession:(NSURLSession *)session;
 - (void)evaluateNotification:(NSDictionary *)notification settings:(NSDictionary *)settings examples:(NSArray *)examples completion:(void (^)(NSNumber *, NSString *))completion;
+- (void)evaluateNotification:(NSDictionary *)notification settings:(NSDictionary *)settings examples:(NSArray *)examples trace:(void (^)(NSDictionary *))trace completion:(void (^)(NSNumber *, NSString *))completion;
 @end
