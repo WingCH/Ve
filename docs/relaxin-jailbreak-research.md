@@ -153,3 +153,12 @@ Relaxin app 有獨立的「Tweak Injection」開關；測試前必須確認已�
 - `mobilesubstrate`／PreferenceLoader dependencies 有 RootHide 官方對應。
 - Ve 已包含 arm64e slice，毋須重新設計 hook engine。
 - 本次支援已獲使用者在 Relaxin 真機實驗確認；剩餘風險是 iOS private API 與 Relaxin public-beta runtime 在後續版本可能改變，因此仍須持續回歸測試。
+
+
+## Notification Logs on iOS 26.0.1
+
+On one iOS 26.0.1 device, the VE Enhanced 2.2 `iphoneos-arm64e` package exposed its PreferenceLoader pane, but **Notification Logs** was missing from **Settings → Notifications**. The user confirmed that the row appeared after installing a 2.2 rebuild with the newer Notifications hook backported from `main`.
+
+The backport replaces the `PSUIPrefsListController` `lazyLoadBundle:` hook for `NOTIFICATIONS_ID` with a `PSListController` `viewDidAppear:` hook scoped to `BulletinBoardController`. It inserts the existing **Notification Logs** link at index 0 and checks for `ve.notification.logs` before inserting. The original Settings reload behavior can run again, and the hook restores the row on appearance if needed.
+
+For a device smoke test, relaunch Settings after installing the build, then open **Notifications** and check that **Notification Logs** appears at the top and opens. Navigate back to Notifications and confirm the row still appears exactly once.
